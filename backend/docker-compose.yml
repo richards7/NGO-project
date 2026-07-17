@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: arogya_postgres
+    command: ["postgres", "-c", "wal_level=logical"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: arogya_camp_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arogya_backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/arogya_camp_db
+      JWT_SECRET: arogya_jwt_secret_change_in_production
+      JWT_REFRESH_SECRET: arogya_refresh_secret_change_in_production
+      PORT: 5000
+      NODE_ENV: production
+      CORS_ORIGIN: http://localhost:8080
+      POWERSYNC_URL: http://localhost:8085
+    ports:
+      - "5001:5000"
+    volumes:
+      - uploads_data:/app/uploads
+      - logs_data:/app/logs
+
+  powersync:
+    image: journeyapps/powersync-service:latest
+    container_name: arogya_powersync
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      POWERSYNC_POSTGRES_URI: postgresql://postgres:password@postgres:5432/arogya_camp_db
+      POWERSYNC_JWT_JWKS_URI: ""
+      POWERSYNC_JWT_SECRET: arogya_jwt_secret_change_in_production
+      POWERSYNC_SYNC_RULES_PATH: /config/sync-config.yaml
+    ports:
+      - "8085:8080"
+    volumes:
+      - ../powersync/sync-config.yaml:/config/sync-config.yaml:ro
+
+volumes:
+  postgres_data:
+  uploads_data:
+  logs_data:

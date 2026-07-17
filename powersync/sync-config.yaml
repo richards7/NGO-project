@@ -1,0 +1,151 @@
+# PowerSync Sync Streams Configuration
+# Defines which PostgreSQL tables are synced to client-side SQLite.
+# All tables use auto_subscribe: true so every authenticated client
+# gets a full copy of the data — appropriate for medical camp scenarios
+# where all staff need access to all patient records.
+
+streams:
+  # ── Reference tables (read-only on client) ──────────────────────────
+
+  roles:
+    auto_subscribe: true
+    query: SELECT id, name, description FROM "Role"
+
+  users:
+    auto_subscribe: true
+    query: >
+      SELECT id, email, name, "roleId" as role_id,
+             "createdAt" as created_at, "updatedAt" as updated_at
+      FROM "User"
+
+  medicine_categories:
+    auto_subscribe: true
+    query: SELECT id, name, description FROM "MedicineCategory"
+
+  diseases:
+    auto_subscribe: true
+    query: SELECT id, name, description FROM "Disease"
+
+  allergies:
+    auto_subscribe: true
+    query: SELECT id, name, description FROM "Allergy"
+
+  # ── Core domain tables ──────────────────────────────────────────────
+
+  camps:
+    auto_subscribe: true
+    query: >
+      SELECT id, "campCode" as camp_code, name, location, date, status,
+             "createdAt" as created_at, "updatedAt" as updated_at
+      FROM "Camp"
+
+  patients:
+    auto_subscribe: true
+    query: >
+      SELECT id, token, name, age, gender, village, phone, priority, status,
+             "queuePriority" as queue_priority, "queueReason" as queue_reason,
+             "queuedAt" as queued_at, "familyId" as family_id,
+             "createdAt" as created_at, "updatedAt" as updated_at
+      FROM "Patient"
+
+  families:
+    auto_subscribe: true
+    query: >
+      SELECT id, name, "headOfHouseholdId" as head_of_household_id,
+             "healthCardId" as health_card_id,
+             "createdAt" as created_at, "updatedAt" as updated_at
+      FROM "Family"
+
+  health_cards:
+    auto_subscribe: true
+    query: >
+      SELECT id, "cardNumber" as card_number,
+             "issueDate" as issue_date, "expiryDate" as expiry_date
+      FROM "HealthCard"
+
+  vitals:
+    auto_subscribe: true
+    query: >
+      SELECT id, bp, sugar, temp, pulse, spo2, height, weight,
+             "pregnancyStatus" as pregnancy_status,
+             "emergencyCondition"::int as emergency_condition,
+             notes, "patientId" as patient_id,
+             "createdAt" as created_at
+      FROM "Vitals"
+
+  prescriptions:
+    auto_subscribe: true
+    query: >
+      SELECT id, "doctorId" as doctor_id, "patientId" as patient_id,
+             "campId" as camp_id, "qrImage" as qr_image, "pdfPath" as pdf_path,
+             advice, "createdAt" as created_at, "updatedAt" as updated_at
+      FROM "Prescription"
+
+  prescription_medicines:
+    auto_subscribe: true
+    query: >
+      SELECT id, "prescriptionId" as prescription_id,
+             "medicineId" as medicine_id,
+             dosage, frequency, duration
+      FROM "PrescriptionMedicine"
+
+  medicines:
+    auto_subscribe: true
+    query: >
+      SELECT id, name, "categoryId" as category_id,
+             "batchNumber" as batch_number, "expiryDate" as expiry_date,
+             stock, "alertLevel" as alert_level,
+             "createdAt" as created_at, "updatedAt" as updated_at
+      FROM "Medicine"
+
+  inventory:
+    auto_subscribe: true
+    query: >
+      SELECT id, "campId" as camp_id, "medicineId" as medicine_id,
+             quantity, reserved, "updatedAt" as updated_at
+      FROM "Inventory"
+
+  medicine_transactions:
+    auto_subscribe: true
+    query: >
+      SELECT id, "medicineId" as medicine_id, "campId" as camp_id,
+             quantity, type, "userId" as user_id,
+             "createdAt" as created_at
+      FROM "MedicineTransaction"
+
+  doctor_notes:
+    auto_subscribe: true
+    query: >
+      SELECT id, "prescriptionId" as prescription_id,
+             "campId" as camp_id, notes, diagnosis,
+             "doctorId" as doctor_id, "createdAt" as created_at
+      FROM "DoctorNote"
+
+  follow_ups:
+    auto_subscribe: true
+    query: >
+      SELECT id, "patientId" as patient_id, notes,
+             "dueDate" as due_date, completed::int,
+             "createdAt" as created_at
+      FROM "FollowUp"
+
+  feedback:
+    auto_subscribe: true
+    query: >
+      SELECT id, "patientId" as patient_id, "campId" as camp_id,
+             rating, comments, "createdAt" as created_at
+      FROM "Feedback"
+
+  notifications:
+    auto_subscribe: true
+    query: >
+      SELECT id, "userId" as user_id, title, message,
+             read::int, type, "createdAt" as created_at
+      FROM "Notification"
+
+  audit_logs:
+    auto_subscribe: true
+    query: >
+      SELECT id, "userId" as user_id, action, details,
+             timestamp
+      FROM "AuditLog"

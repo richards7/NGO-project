@@ -1,0 +1,297 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. User Model
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  name         String
+  roleId       String
+  role         Role          @relation(fields: [roleId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions MedicineTransaction[]
+  doctorNotes  DoctorNote[]
+  prescriptions Prescription[]
+  reports      Report[]
+  auditLogs    AuditLog[]
+  notifications Notification[]
+}
+
+// 2. Role Model
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique // "admin", "registration", "medical_assistant", "doctor", "pharmacy"
+  description String?
+  users       User[]
+  permissions Permission[] @relation("RolePermissions")
+}
+
+// 3. Permission Model
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  roles       Role[]   @relation("RolePermissions")
+}
+
+// 4. Medical Camp Model
+model Camp {
+  id           String        @id @default(uuid())
+  campCode     String        @unique // e.g. "C-2041"
+  name         String
+  location     String
+  date         DateTime
+  status       String        @default("Scheduled") // "Scheduled", "Active", "Completed"
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  prescriptions Prescription[]
+  inventory    Inventory[]
+  transactions MedicineTransaction[]
+  doctorNotes  DoctorNote[]
+  feedback     Feedback[]
+  reports      Report[]
+}
+
+// 5. Patient Model
+model Patient {
+  id             String         @id @default(uuid())
+  token          String?        // Token assigned per camp, e.g. "T-042"
+  name           String
+  age            Int
+  gender         String
+  village        String
+  phone          String?
+  priority       String         @default("normal") // "normal", "emergency"
+  status         String         @default("Registered") // "Registered", "Vitals Captured", "In Consultation", "Waiting for Pharmacy", "Completed"
+  queuePriority  String         @default("normal") // "highest", "high", "medium", "normal"
+  queueReason    String?        // reason for priority assignment
+  queuedAt       DateTime?      // when patient entered queue
+  familyId       String?
+  family         Family?        @relation(fields: [familyId], references: [id])
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  vitals         Vitals[]
+  prescriptions  Prescription[]
+  followUps      FollowUp[]
+  feedback       Feedback[]
+  diseases       Disease[]      @relation("PatientDiseases")
+  allergies      Allergy[]      @relation("PatientAllergies")
+}
+
+// 6. Family Model
+model Family {
+  id                 String      @id @default(uuid())
+  name               String
+  headOfHouseholdId  String?
+  healthCardId       String?     @unique
+  healthCard         HealthCard? @relation(fields: [healthCardId], references: [id])
+  patients           Patient[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
+
+// 7. Family Health Card Model
+model HealthCard {
+  id         String   @id @default(uuid())
+  cardNumber String   @unique // Unique card number
+  issueDate  DateTime @default(now())
+  expiryDate DateTime
+  family     Family?
+}
+
+// 8. Vitals Model
+model Vitals {
+  id                 String   @id @default(uuid())
+  bp                 String   // e.g. "120/80"
+  sugar              Int      // e.g. 110 (mg/dL)
+  temp               Float    // e.g. 98.6
+  pulse              Int      // e.g. 72
+  spo2               Int      // e.g. 98
+  height             Float?   // in cm
+  weight             Float?   // in kg
+  pregnancyStatus    String?  // "none", "pregnant", "postpartum"
+  emergencyCondition Boolean  @default(false)
+  notes              String?  // notes for doctor
+  patientId          String
+  patient            Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now())
+}
+
+// 9. Disease Model
+model Disease {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  patients    Patient[] @relation("PatientDiseases")
+}
+
+// 10. Allergy Model
+model Allergy {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  patients    Patient[] @relation("PatientAllergies")
+}
+
+// 11. Prescription Model
+model Prescription {
+  id          String                 @id @default(uuid())
+  doctorId    String
+  doctor      User                   @relation(fields: [doctorId], references: [id])
+  patientId   String
+  patient     Patient                @relation(fields: [patientId], references: [id])
+  campId      String
+  camp        Camp                   @relation(fields: [campId], references: [id])
+  qrImage     String?                // Base64 or local S3 path
+  pdfPath     String?                // Location of generated PDF
+  advice      String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  medicines   PrescriptionMedicine[]
+  doctorNotes DoctorNote[]
+}
+
+// 12. Prescription Medicine Model
+model PrescriptionMedicine {
+  id             String       @id @default(uuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  medicineId     String
+  medicine       Medicine     @relation(fields: [medicineId], references: [id])
+  dosage         String       // e.g. "1-0-1"
+  frequency      String       // e.g. "Twice daily"
+  duration       String       // e.g. "5 days"
+}
+
+// 13. Medicine Model
+model Medicine {
+  id            String                 @id @default(uuid())
+  name          String                 @unique
+  categoryId    String
+  category      MedicineCategory       @relation(fields: [categoryId], references: [id])
+  batchNumber   String
+  expiryDate    DateTime
+  stock         Int                    @default(0)
+  alertLevel    Int                    @default(50) // threshold for low stock alert
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  prescriptions PrescriptionMedicine[]
+  inventory     Inventory[]
+  transactions  MedicineTransaction[]
+}
+
+// 14. Medicine Category Model
+model MedicineCategory {
+  id          String     @id @default(uuid())
+  name        String     @unique // e.g. "Analgesic", "Antibiotic"
+  description String?
+  medicines   Medicine[]
+}
+
+// 15. Inventory Model (Stock at individual Camp level)
+model Inventory {
+  id         String   @id @default(uuid())
+  campId     String
+  camp       Camp     @relation(fields: [campId], references: [id])
+  medicineId String
+  medicine   Medicine @relation(fields: [medicineId], references: [id])
+  quantity   Int      @default(0)
+  reserved   Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([campId, medicineId])
+}
+
+// 16. Medicine Transaction Model
+model MedicineTransaction {
+  id         String   @id @default(uuid())
+  medicineId String
+  medicine   Medicine @relation(fields: [medicineId], references: [id])
+  campId     String?
+  camp       Camp?    @relation(fields: [campId], references: [id])
+  quantity   Int
+  type       String   // "IN", "OUT", "DISPENSED", "ADJUSTMENT"
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+// 17. Doctor Note Model
+model DoctorNote {
+  id             String        @id @default(uuid())
+  prescriptionId String
+  prescription   Prescription  @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  campId         String
+  camp           Camp          @relation(fields: [campId], references: [id])
+  notes          String
+  diagnosis      String
+  doctorId       String
+  doctor         User          @relation(fields: [doctorId], references: [id])
+  createdAt      DateTime      @default(now())
+}
+
+// 18. Follow Up Model
+model FollowUp {
+  id        String   @id @default(uuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  notes     String
+  dueDate   DateTime
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// 19. Feedback Model
+model Feedback {
+  id        String   @id @default(uuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  campId    String
+  camp      Camp     @relation(fields: [campId], references: [id])
+  rating    Int      // 1 to 5 stars
+  comments  String?
+  createdAt DateTime @default(now())
+}
+
+// 20. Notification Model
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  type      String   // "STOCK_ALERT", "FOLLOW_UP", "CAMP_UPDATE"
+  createdAt DateTime @default(now())
+}
+
+// 21. Audit Log Model
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String   // e.g. "LOGIN", "REGISTER_PATIENT", "DISPENSE_MEDICINE"
+  details   String
+  timestamp DateTime @default(now())
+}
+
+// 22. Report Model
+model Report {
+  id           String   @id @default(uuid())
+  campId       String?
+  camp         Camp?    @relation(fields: [campId], references: [id])
+  title        String
+  type         String   // "CAMP_SUMMARY", "DISEASE_DISTRIBUTION", "INVENTORY_CONSUMPTION"
+  data         String   // JSON string containing metrics
+  generatedById String
+  generatedBy  User     @relation(fields: [generatedById], references: [id])
+  createdAt    DateTime @default(now())
+}

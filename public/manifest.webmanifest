@@ -1,0 +1,12 @@
+{
+  "name": "Arogya Camp OS",
+  "short_name": "Arogya",
+  "description": "Offline-first medical camp management for NGOs",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon" }
+  ]
+}

@@ -1,0 +1,29 @@
+# PowerSync Service — Docker Compose
+# Self-hosted PowerSync for offline-first sync between
+# browser SQLite and your PostgreSQL database.
+#
+# Usage:
+#   1. Set DATABASE_URL in your .env to point to PostgreSQL with logical replication enabled.
+#   2. Run: docker-compose up -d
+#   3. Set POWERSYNC_URL=http://localhost:8080 in your backend .env
+
+version: "3.8"
+
+services:
+  powersync:
+    image: journeyapps/powersync-service:latest
+    container_name: arogya-powersync
+    ports:
+      - "8080:8080"
+    environment:
+      # PostgreSQL connection (must have logical replication enabled: wal_level=logical)
+      POWERSYNC_POSTGRES_URI: ${DATABASE_URL}
+      # JWT verification — must match the secret used to sign tokens in auth.routes.ts
+      POWERSYNC_JWT_JWKS_URI: ""
+      POWERSYNC_JWT_SECRET: ${JWT_SECRET}
+      # Sync configuration file
+      POWERSYNC_SYNC_RULES_PATH: /config/sync-config.yaml
+    volumes:
+      - ./sync-config.yaml:/config/sync-config.yaml:ro
+    restart: unless-stopped
+    depends_on: []
