@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 import { logger } from "../utils/logger";
 
 export function auditLog(action: string) {
   return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     if (req.user) {
       try {
-        await prisma.auditLog.create({
+        const db = getDb();
+        await db.auditLog.create({
           data: {
             userId: req.user.userId,
             action,

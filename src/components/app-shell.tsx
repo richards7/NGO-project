@@ -23,8 +23,10 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { type ReactNode } from "react";
-import { useAuth, useOnlineStatus, useTheme } from "@/lib/auth";
+import { useAuth, useTheme } from "@/lib/auth";
+import { useNetworkState } from "@/lib/network/useNetworkState";
 import { useSyncStatus } from "@/lib/powersync/provider";
+import { Cloud, Server } from "lucide-react";
 import type { Role } from "@/lib/demo-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,7 +65,7 @@ const NAV: NavItem[] = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { session, logout } = useAuth();
-  const { online } = useOnlineStatus();
+  const networkState = useNetworkState();
   const { pendingMutations: pending, connected, triggerSync: sync } = useSyncStatus();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
@@ -110,11 +112,19 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         <div className="p-3 border-t">
           <div className={cn(
-            "flex items-center gap-2 rounded-xl px-3 py-2 text-xs",
-            connected ? "bg-success/10 text-success" : online ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning-foreground",
+            "flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium",
+            networkState === "CLOUD" ? "bg-primary/10 text-primary" : 
+            networkState === "CAMP" ? "bg-success/10 text-success" : 
+            "bg-warning/10 text-warning-foreground",
           )}>
-            <span className={cn("size-2 rounded-full", connected ? "bg-success animate-pulse" : online ? "bg-primary" : "bg-warning")} />
-            {connected ? "Synced" : online ? `Online · ${pending} pending` : `Offline · ${pending} pending`}
+            {networkState === "CLOUD" && <Cloud className="size-4" />}
+            {networkState === "CAMP" && <Server className="size-4" />}
+            {networkState === "OFFLINE" && <WifiOff className="size-4" />}
+            <div className="flex-1">
+              {networkState === "CLOUD" ? "Cloud Connected" : 
+               networkState === "CAMP" ? "Local Camp Server" : 
+               "Offline Mode"}
+            </div>
           </div>
         </div>
       </aside>
@@ -136,9 +146,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input placeholder="Search patients, meds, camps…" className="pl-9 w-64 h-9 bg-muted/50 border-transparent focus-visible:bg-card" />
               </div>
-              {!online && (
+              {networkState === "OFFLINE" && (
                 <Badge variant="outline" className="gap-1.5 border-warning/40 bg-warning/10 text-warning-foreground">
                   <WifiOff className="size-3" /> Offline
+                </Badge>
+              )}
+              {networkState === "CAMP" && (
+                <Badge variant="outline" className="gap-1.5 border-success/40 bg-success/10 text-success">
+                  <Server className="size-3" /> Local Server
                 </Badge>
               )}
               {pending > 0 && (
@@ -188,9 +203,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        {!online && (
+        {networkState === "OFFLINE" && (
           <div className="bg-warning/10 border-b border-warning/30 px-4 md:px-6 py-2 text-xs text-warning-foreground flex items-center gap-2">
-            <WifiOff className="size-3.5" /> You're offline. Changes will sync automatically when you're back online.
+            <WifiOff className="size-3.5" /> You're offline. Changes will sync automatically when you reconnect to the Cloud or Camp server.
           </div>
         )}
 

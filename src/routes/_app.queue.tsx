@@ -53,9 +53,9 @@ function QueuePage() {
           <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
             {columns.map((col) => {
               const items = (patients ?? []).filter((p: LocalPatient) => {
-                if (col.key === "Emergency") return p.queue_priority === "highest" && p.status !== "In Consultation";
-                if (col.key === "HighPriority") return p.queue_priority === "high" && p.status !== "In Consultation";
-                if (col.key === "Waiting") return (p.queue_priority === "normal" || p.queue_priority === "medium") && p.status !== "In Consultation";
+                if (col.key === "Emergency") return p.queuePriority === "highest" && p.status !== "In Consultation";
+                if (col.key === "HighPriority") return p.queuePriority === "high" && p.status !== "In Consultation";
+                if (col.key === "Waiting") return (p.queuePriority === "normal" || p.queuePriority === "medium") && p.status !== "In Consultation";
                 if (col.key === "InConsultation") return p.status === "In Consultation";
                 return false;
               });
@@ -103,7 +103,7 @@ function QueuePage() {
                         <Badge variant="outline">{p.status}</Badge>
                       </div>
                       <div className="mt-4 text-xs text-muted-foreground">
-                        Updated: {new Date(p.updated_at).toLocaleTimeString()}
+                        Updated: {new Date(p.updatedAt).toLocaleTimeString()}
                       </div>
                     </div>
                     <div className="mt-4 pt-4 border-t flex justify-end">
@@ -153,9 +153,9 @@ function QueueCard({ patient: p, index: i, col, isDoctor, isNurse, navigate }: {
             <div className="text-xs text-muted-foreground">{p.token} · {p.age}y</div>
           </div>
         </div>
-        {p.queue_reason && p.queue_reason !== "Normal" && (
+        {p.queueReason && p.queueReason !== "Normal" && (
           <div className="mt-2 text-[10px] font-medium text-destructive truncate">
-            Alert: {p.queue_reason}
+            Alert: {p.queueReason}
           </div>
         )}
         <div className="mt-2 flex items-center gap-1.5 flex-wrap text-[10px]">
@@ -178,9 +178,9 @@ function QueueCard({ patient: p, index: i, col, isDoctor, isNurse, navigate }: {
               </Button>
             )}
           </div>
-          {!isDoctor && !isNurse && p.queued_at && (
+          {!isDoctor && !isNurse && p.queuedAt && (
             <span className="text-[10px] text-muted-foreground">
-              {new Date(p.queued_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {new Date(p.queuedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
         </div>

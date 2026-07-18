@@ -1,7 +1,5 @@
-/**
- * Reactive hook for medicines — reads from local SQLite.
- */
-import { useQuery } from "@powersync/react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/api";
 
 export interface LocalMedicine {
   id: string;
@@ -21,38 +19,27 @@ export interface LocalMedicineWithCategory extends LocalMedicine {
 
 /** All medicines with category names */
 export function useMedicines() {
-  return useQuery<LocalMedicineWithCategory>(
-    `SELECT m.*, mc.name as category_name
-     FROM medicines m
-     LEFT JOIN medicine_categories mc ON m.category_id = mc.id
-     ORDER BY m.name ASC`,
-  );
+  return useQuery({
+    queryKey: ["medicines"],
+    queryFn: async () => {
+      const res = await apiRequest("/pharmacy/medicines");
+      return (res.data || []) as LocalMedicineWithCategory[];
+    },
+  });
 }
 
 /** Inventory for a specific camp */
 export function useInventory(campId: string | undefined) {
-  return useQuery<{
-    id: string;
-    camp_id: string;
-    medicine_id: string;
-    quantity: number;
-    reserved: number;
-    medicine_name: string;
-    category_name: string | null;
-    alert_level: number;
-  }>(
-    campId
-      ? `SELECT i.*, m.name as medicine_name, mc.name as category_name, m.alert_level
-         FROM inventory i
-         JOIN medicines m ON i.medicine_id = m.id
-         LEFT JOIN medicine_categories mc ON m.category_id = mc.id
-         WHERE i.camp_id = ?
-         ORDER BY m.name ASC`
-      : `SELECT i.*, m.name as medicine_name, mc.name as category_name, m.alert_level
-         FROM inventory i
-         JOIN medicines m ON i.medicine_id = m.id
-         LEFT JOIN medicine_categories mc ON m.category_id = mc.id
-         ORDER BY m.name ASC`,
-    campId ? [campId] : [],
-  );
+  return useQuery({
+    queryKey: ["inventory", campId],
+    queryFn: async () => {
+      if (!campId) {
+        const res = await apiRequest("/pharmacy/inventory/all"); // Assuming this exists or falls back
+        return (res.data || []) as any[];
+      }
+      const res = await apiRequest(`/pharmacy/inventory/${campId}`);
+      return (res.data || []) as any[];
+    },
+    enabled: true,
+  });
 }

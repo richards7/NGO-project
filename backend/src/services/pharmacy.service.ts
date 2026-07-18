@@ -1,10 +1,11 @@
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 import { AppError } from "../utils/app-error";
 import { logger } from "../utils/logger";
 
 export class PharmacyService {
   async dispense(prescriptionId: string, campId: string, userId: string) {
-    const prescription = await prisma.prescription.findUnique({
+    const db = getDb();
+    const prescription = await db.prescription.findUnique({
       where: { id: prescriptionId },
       include: { medicines: { include: { medicine: true } } },
     });
@@ -20,19 +21,19 @@ export class PharmacyService {
       }
 
       // Decrease global stock
-      await prisma.medicine.update({
+      await db.medicine.update({
         where: { id: medicine.id },
         data: { stock: { decrement: 1 } },
       });
 
       // Decrease camp inventory
-      await prisma.inventory.updateMany({
+      await db.inventory.updateMany({
         where: { campId, medicineId: medicine.id },
         data: { quantity: { decrement: 1 } },
       });
 
       // Record transaction
-      await prisma.medicineTransaction.create({
+      await db.medicineTransaction.create({
         data: {
           medicineId: medicine.id,
           campId,
@@ -44,7 +45,7 @@ export class PharmacyService {
     }
 
     // Update patient status
-    await prisma.patient.update({
+    await db.patient.update({
       where: { id: prescription.patientId },
       data: { status: "Completed" },
     });
@@ -54,11 +55,12 @@ export class PharmacyService {
   }
 
   async getMedicines(search?: string) {
+    const db = getDb();
     const where = search
       ? { name: { contains: search, mode: "insensitive" as const } }
       : {};
 
-    return prisma.medicine.findMany({
+    return db.medicine.findMany({
       where,
       include: { category: true },
       orderBy: { name: "asc" },
@@ -66,17 +68,19 @@ export class PharmacyService {
   }
 
   async getLowStockAlerts() {
-    return prisma.medicine.findMany({
-      where: { stock: { lte: prisma.medicine.fields.alertLevel } },
+    const db = getDb();
+    const all = await db.medicine.findMany({
       include: { category: true },
     });
+    return all.filter((m: any) => m.stock <= m.alertLevel);
   }
 
   async getExpiringMedicines(daysAhead = 90) {
+    const db = getDb();
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() + daysAhead);
 
-    return prisma.medicine.findMany({
+    return db.medicine.findMany({
       where: { expiryDate: { lte: cutoff } },
       include: { category: true },
       orderBy: { expiryDate: "asc" },
@@ -84,11 +88,12 @@ export class PharmacyService {
   }
 
   async getTransactionHistory(medicineId?: string, campId?: string) {
+    const db = getDb();
     const where: Record<string, unknown> = {};
     if (medicineId) where.medicineId = medicineId;
     if (campId) where.campId = campId;
 
-    return prisma.medicineTransaction.findMany({
+    return db.medicineTransaction.findMany({
       where,
       include: { medicine: true, user: true, camp: true },
       orderBy: { createdAt: "desc" },
@@ -97,18 +102,19 @@ export class PharmacyService {
   }
 
   async addStock(medicineId: string, quantity: number, campId: string, userId: string) {
-    await prisma.medicine.update({
+    const db = getDb();
+    await db.medicine.update({
       where: { id: medicineId },
       data: { stock: { increment: quantity } },
     });
 
-    await prisma.inventory.upsert({
+    await db.inventory.upsert({
       where: { campId_medicineId: { campId, medicineId } },
       update: { quantity: { increment: quantity } },
       create: { campId, medicineId, quantity },
     });
 
-    await prisma.medicineTransaction.create({
+    await db.medicineTransaction.create({
       data: { medicineId, campId, quantity, type: "IN", userId },
     });
 
@@ -116,7 +122,8 @@ export class PharmacyService {
   }
 
   async getCampInventory(campId: string) {
-    return prisma.inventory.findMany({
+    const db = getDb();
+    return db.inventory.findMany({
       where: { campId },
       include: { medicine: { include: { category: true } } },
     });

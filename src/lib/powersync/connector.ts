@@ -10,7 +10,7 @@ import {
   type PowerSyncBackendConnector,
 } from "@powersync/web";
 
-const API_URL = "http://localhost:5001/api/v1";
+import { networkManager } from "../network/NetworkManager";
 
 function getAuthToken(): string | null {
   return localStorage.getItem("arogya.token");
@@ -23,7 +23,7 @@ export class ArogyaBackendConnector implements PowerSyncBackendConnector {
       throw new Error("Not authenticated — cannot fetch PowerSync credentials");
     }
 
-    const response = await fetch(`${API_URL}/auth/powersync-token`, {
+    const response = await fetch(`${networkManager.getApiUrl()}/auth/powersync-token`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -49,7 +49,7 @@ export class ArogyaBackendConnector implements PowerSyncBackendConnector {
     }
 
     try {
-      const response = await fetch(`${API_URL}/sync/powersync-push`, {
+      const response = await fetch(`${networkManager.getApiUrl()}/sync/powersync-push`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

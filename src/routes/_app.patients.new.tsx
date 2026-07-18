@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/_app/patients/new")({
 
 function NewPatient() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(null);
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -52,6 +54,8 @@ function NewPatient() {
       });
 
       setToken(result.token);
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["queue"] });
       toast.success(`Patient registered · Token ${result.token} issued`);
     } catch (err: any) {
       toast.error(err.message || "Failed to register patient");

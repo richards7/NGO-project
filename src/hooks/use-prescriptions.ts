@@ -1,76 +1,60 @@
 /**
- * Reactive hook for prescriptions — reads from local SQLite with JOINs.
+ * Reactive hook for prescriptions — reads from local
  */
-import { useQuery } from "@powersync/react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/api";
 
 export interface LocalPrescription {
   id: string;
-  doctor_id: string;
-  patient_id: string;
-  camp_id: string;
+  doctorId: string;
+  patientId: string;
+  campId: string;
   advice: string | null;
-  created_at: string;
-  updated_at: string;
-  doctor_name: string | null;
-}
-
-export interface LocalPrescriptionMedicine {
-  id: string;
-  prescription_id: string;
-  medicine_id: string;
-  dosage: string;
-  frequency: string;
-  duration: string;
-  medicine_name: string | null;
-  category_name: string | null;
-  stock: number | null;
+  createdAt: string;
+  updatedAt: string;
+  medicines?: Array<{
+    id: string;
+    medicineId: string;
+    medicineName: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+  }>;
 }
 
 /** Get prescriptions for a patient */
 export function usePrescriptions(patientId: string | undefined) {
-  return useQuery<LocalPrescription>(
-    patientId
-      ? `SELECT p.*, u.name as doctor_name
-         FROM prescriptions p
-         LEFT JOIN users u ON p.doctor_id = u.id
-         WHERE p.patient_id = ?
-         ORDER BY p.created_at DESC`
-      : `SELECT p.*, u.name as doctor_name
-         FROM prescriptions p
-         LEFT JOIN users u ON p.doctor_id = u.id
-         WHERE 0`,
-    patientId ? [patientId] : [],
-  );
+  return useQuery({
+    queryKey: ["prescriptions", patientId],
+    queryFn: async () => {
+      if (!patientId) return [];
+      const res = await apiRequest(`/patients/${patientId}/history`);
+      return (res.data || []) as LocalPrescription[];
+    },
+    enabled: !!patientId,
+  });
 }
 
 /** Get medicine lines for a prescription */
 export function usePrescriptionMedicines(prescriptionId: string | undefined) {
-  return useQuery<LocalPrescriptionMedicine>(
-    prescriptionId
-      ? `SELECT pm.*, m.name as medicine_name, mc.name as category_name, m.stock
-         FROM prescription_medicines pm
-         LEFT JOIN medicines m ON pm.medicine_id = m.id
-         LEFT JOIN medicine_categories mc ON m.category_id = mc.id
-         WHERE pm.prescription_id = ?`
-      : `SELECT pm.*, m.name as medicine_name, mc.name as category_name, m.stock
-         FROM prescription_medicines pm
-         LEFT JOIN medicines m ON pm.medicine_id = m.id
-         LEFT JOIN medicine_categories mc ON m.category_id = mc.id
-         WHERE 0`,
-    prescriptionId ? [prescriptionId] : [],
-  );
+  return useQuery({
+    queryKey: ["prescriptionMedicines", prescriptionId],
+    queryFn: async () => {
+      if (!prescriptionId) return [];
+      const res = await apiRequest(`/prescriptions/${prescriptionId}/medicines`);
+      return (res.data || []) as any[];
+    },
+    enabled: !!prescriptionId,
+  });
 }
 
 /** Get camps */
 export function useCamps() {
-  return useQuery<{
-    id: string;
-    camp_code: string;
-    name: string;
-    location: string;
-    date: string;
-    status: string;
-    created_at: string;
-    updated_at: string;
-  }>(`SELECT * FROM camps ORDER BY date DESC`);
+  return useQuery({
+    queryKey: ["camps"],
+    queryFn: async () => {
+      const res = await apiRequest("/camps");
+      return (res.data || []) as any[];
+    },
+  });
 }

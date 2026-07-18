@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity, ArrowUpRight, CalendarDays, Package, Pill, Stethoscope, Tent, TrendingUp, Users,
+  Cloud, Server, WifiOff, RefreshCw
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,12 +14,66 @@ import {
 } from "recharts";
 import { useAuth } from "@/lib/auth";
 import { apiRequest } from "@/lib/api";
+import { useNetworkState } from "@/lib/network/useNetworkState";
+import { useSyncStatus } from "@/lib/powersync/provider";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
 });
 
 const COLORS = ["oklch(0.58 0.18 245)", "oklch(0.7 0.15 165)", "oklch(0.72 0.14 210)", "oklch(0.78 0.16 75)", "oklch(0.65 0.2 305)", "oklch(0.5 0.03 250)"];
+
+function SyncWidget() {
+  const networkState = useNetworkState();
+  const { pendingMutations, triggerSync } = useSyncStatus();
+
+  return (
+    <Card className="mt-6 p-5 card-elevated bg-gradient-to-r from-card to-card/50">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className={`size-12 rounded-xl grid place-items-center ${
+            networkState === "CLOUD" ? "bg-primary/10 text-primary" :
+            networkState === "CAMP" ? "bg-success/10 text-success" :
+            "bg-warning/10 text-warning-foreground"
+          }`}>
+            {networkState === "CLOUD" && <Cloud className="size-6" />}
+            {networkState === "CAMP" && <Server className="size-6" />}
+            {networkState === "OFFLINE" && <WifiOff className="size-6" />}
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">
+              {networkState === "CLOUD" ? "Cloud Connected" :
+               networkState === "CAMP" ? "Local Camp Server Active" :
+               "Offline Mode"}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {networkState === "CLOUD" ? "All data is syncing in real-time to the main database." :
+               networkState === "CAMP" ? "Syncing to local camp server. Will upload to cloud when internet is available." :
+               "No connection. Data is saved locally on this device."}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4 border-l pl-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold">{pendingMutations}</div>
+            <div className="text-xs text-muted-foreground">Pending Edits</div>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={triggerSync}
+            disabled={pendingMutations === 0 || networkState === "OFFLINE"}
+            className="gap-2"
+          >
+            <RefreshCw className={`size-4 ${pendingMutations > 0 && networkState !== "OFFLINE" ? "animate-spin-slow" : ""}`} />
+            Sync Now
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 function StatCard({
   icon: Icon, label, value, delta, tone = "primary",
@@ -110,6 +165,8 @@ function Dashboard() {
           </motion.div>
         ))}
       </motion.div>
+
+      <SyncWidget />
 
       <div className="grid lg:grid-cols-3 gap-4 mt-6">
         <Card className="p-5 lg:col-span-2 card-elevated">

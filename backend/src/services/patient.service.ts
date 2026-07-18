@@ -1,4 +1,4 @@
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 import { AppError } from "../utils/app-error";
 import type { CreatePatientDTO, UpdatePatientDTO, CaptureVitalsDTO, CreateFamilyDTO } from "../dtos/patient.dto";
 import { appendPatientToCSV } from "../utils/csv";
@@ -12,8 +12,9 @@ export class PatientService {
   private tokenCounter = 0;
 
   async create(dto: CreatePatientDTO, campId?: string) {
+    const db = getDb();
     // Get the current max token number to avoid collisions
-    const lastPatient = await prisma.patient.findFirst({
+    const lastPatient = await db.patient.findFirst({
       where: { token: { not: null } },
       orderBy: { createdAt: "desc" },
     });
@@ -24,7 +25,7 @@ export class PatientService {
     this.tokenCounter++;
     const token = `T-${String(this.tokenCounter).padStart(3, "0")}`;
 
-    const patient = await prisma.patient.create({
+    const patient = await db.patient.create({
       data: { ...dto, token, status: "Registered" },
       include: { family: true, vitals: true },
     });
@@ -35,6 +36,7 @@ export class PatientService {
   }
 
   async findAll(page = 1, limit = 20, search?: string) {
+    const db = getDb();
     const where = search
       ? {
           OR: [
@@ -47,21 +49,22 @@ export class PatientService {
       : {};
 
     const [patients, total] = await Promise.all([
-      prisma.patient.findMany({
+      db.patient.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { createdAt: "desc" },
         include: { vitals: { orderBy: { createdAt: "desc" }, take: 1 }, family: true },
       }),
-      prisma.patient.count({ where }),
+      db.patient.count({ where }),
     ]);
 
     return { patients, total };
   }
 
   async findById(id: string) {
-    const patient = await prisma.patient.findUnique({
+    const db = getDb();
+    const patient = await db.patient.findUnique({
       where: { id },
       include: {
         vitals: { orderBy: { createdAt: "desc" } },
@@ -78,16 +81,19 @@ export class PatientService {
   }
 
   async update(id: string, dto: UpdatePatientDTO) {
+    const db = getDb();
     await this.findById(id);
-    return prisma.patient.update({ where: { id }, data: dto });
+    return db.patient.update({ where: { id }, data: dto });
   }
 
   async updateStatus(id: string, status: string) {
-    return prisma.patient.update({ where: { id }, data: { status } });
+    const db = getDb();
+    return db.patient.update({ where: { id }, data: { status } });
   }
 
   // ─── Triage Priority Calculation ─────────────────────────────────────────
   calculatePriority(vitals: CaptureVitalsDTO, patientAge: number): TriageResult {
+    const db = getDb();
     const reasons: string[] = [];
 
     // Parse BP
@@ -131,9 +137,10 @@ export class PatientService {
   }
 
   async captureVitals(dto: CaptureVitalsDTO) {
+    const db = getDb();
     const patient = await this.findById(dto.patientId);
 
-    const vitals = await prisma.vitals.create({
+    const vitals = await db.vitals.create({
       data: {
         bp: dto.bp,
         sugar: dto.sugar,
@@ -152,12 +159,12 @@ export class PatientService {
     // Connect diseases if provided
     if (dto.diseases && dto.diseases.length > 0) {
       for (const diseaseName of dto.diseases) {
-        const disease = await prisma.disease.upsert({
+        const disease = await db.disease.upsert({
           where: { name: diseaseName },
           update: {},
           create: { name: diseaseName },
         });
-        await prisma.patient.update({
+        await db.patient.update({
           where: { id: dto.patientId },
           data: { diseases: { connect: { id: disease.id } } },
         });
@@ -167,12 +174,12 @@ export class PatientService {
     // Connect allergies if provided
     if (dto.allergies && dto.allergies.length > 0) {
       for (const allergyName of dto.allergies) {
-        const allergy = await prisma.allergy.upsert({
+        const allergy = await db.allergy.upsert({
           where: { name: allergyName },
           update: {},
           create: { name: allergyName },
         });
-        await prisma.patient.update({
+        await db.patient.update({
           where: { id: dto.patientId },
           data: { allergies: { connect: { id: allergy.id } } },
         });
@@ -183,7 +190,7 @@ export class PatientService {
     const triage = this.calculatePriority(dto, patient.age);
 
     // Update patient status and queue info
-    await prisma.patient.update({
+    await db.patient.update({
       where: { id: dto.patientId },
       data: {
         status: "Vitals Captured",
@@ -198,13 +205,14 @@ export class PatientService {
   }
 
   async updateVitalsByPatient(patientId: string, dto: CaptureVitalsDTO) {
+    const db = getDb();
     const patient = await this.findById(patientId);
     if (!patient.vitals || patient.vitals.length === 0) {
       throw AppError.notFound("No vitals found for this patient");
     }
     const latestVitals = patient.vitals[0];
 
-    const vitals = await prisma.vitals.update({
+    const vitals = await db.vitals.update({
       where: { id: latestVitals.id },
       data: {
         bp: dto.bp,
@@ -224,7 +232,7 @@ export class PatientService {
     const triage = this.calculatePriority(dto, patient.age);
 
     // Update patient queue info but keep them in queue
-    await prisma.patient.update({
+    await db.patient.update({
       where: { id: patientId },
       data: {
         queuePriority: triage.priority,
@@ -237,6 +245,7 @@ export class PatientService {
   }
 
   async getQueue(campId?: string) {
+    const db = getDb();
     const priorityOrder: Record<string, number> = {
       highest: 0,
       high: 1,
@@ -244,7 +253,7 @@ export class PatientService {
       normal: 3,
     };
 
-    const patients = await prisma.patient.findMany({
+    const patients = await db.patient.findMany({
       where: {
         status: { in: ["Vitals Captured", "Waiting", "In Consultation"] },
       },
@@ -268,7 +277,8 @@ export class PatientService {
   }
 
   async getPharmacyQueue() {
-    return prisma.patient.findMany({
+    const db = getDb();
+    return db.patient.findMany({
       where: {
         status: { in: ["Waiting for Pharmacy", "Completed"] },
       },
@@ -290,11 +300,13 @@ export class PatientService {
 
   // ─── Family / Household ────────────────────────────────────────────────────
   async createFamily(dto: CreateFamilyDTO) {
-    return prisma.family.create({ data: dto });
+    const db = getDb();
+    return db.family.create({ data: dto });
   }
 
   async findFamilyById(id: string) {
-    const family = await prisma.family.findUnique({
+    const db = getDb();
+    const family = await db.family.findUnique({
       where: { id },
       include: { patients: true, healthCard: true },
     });
@@ -303,14 +315,16 @@ export class PatientService {
   }
 
   async searchFamilies(search: string) {
-    return prisma.family.findMany({
+    const db = getDb();
+    return db.family.findMany({
       where: { name: { contains: search, mode: "insensitive" } },
       include: { patients: true },
     });
   }
 
   async getPatientHistory(patientId: string) {
-    return prisma.prescription.findMany({
+    const db = getDb();
+    return db.prescription.findMany({
       where: { patientId },
       orderBy: { createdAt: "desc" },
       include: {

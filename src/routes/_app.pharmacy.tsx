@@ -20,7 +20,8 @@ import { useMedicines } from "@/hooks/use-medicines";
 import { usePrescriptions, useCamps } from "@/hooks/use-prescriptions";
 import { dispenseMedicine, createFeedback, createMedicine } from "@/lib/powersync/mutations";
 import { useAuth } from "@/lib/auth";
-import { useQuery } from "@powersync/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/api";
 
 export const Route = createFileRoute("/_app/pharmacy")({
   component: PharmacyPage,
@@ -30,6 +31,7 @@ function PharmacyPage() {
   const { session } = useAuth();
   const { data: queue } = usePharmacyQueue();
   const { data: medicines } = useMedicines();
+  const queryClient = useQueryClient();
   
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [activePatient, setActivePatient] = useState<any>(null);
@@ -46,14 +48,17 @@ function PharmacyPage() {
       const rx = activePatient._prescription;
       if (!rx) throw new Error("No prescription found");
 
-      await dispenseMedicine(rx.id, rx.camp_id, session?.email ?? "unknown", dispenseQuantities);
+      await dispenseMedicine(rx.id, rx.campId, session?.email ?? "unknown", dispenseQuantities);
 
       await createFeedback({
         patientId: activePatient.id,
-        campId: rx.camp_id,
+        campId: rx.campId,
         rating,
         comments,
       });
+
+      queryClient.invalidateQueries({ queryKey: ["pharmacyQueue"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
 
       toast.success("Medicines dispensed & feedback submitted · saved offline");
       setFeedbackOpen(false);
@@ -254,13 +259,21 @@ function PrescriptionMedicineQuantities({ prescriptionId, quantities, onChange }
   quantities: Record<string, number>;
   onChange: (medicineId: string, qty: number) => void;
 }) {
-  const { data: rxMeds } = useQuery<{ medicine_id: string; medicine_name: string; dosage: string; duration: string; }>(
-    `SELECT pm.medicine_id, m.name as medicine_name, pm.dosage, pm.duration
-     FROM prescription_medicines pm
-     JOIN medicines m ON pm.medicine_id = m.id
-     WHERE pm.prescription_id = ?`,
-    [prescriptionId]
-  );
+  const { data: rxMeds } = useQuery({
+    queryKey: ["prescriptionMeds", prescriptionId],
+    queryFn: async () => {
+      const res = await apiRequest(`/consultation/prescriptions/${prescriptionId}`);
+      if (!res.data || !res.data.medicines) return [];
+      
+      return res.data.medicines.map((m: any) => ({
+        medicine_id: m.medicineId,
+        medicine_name: m.medicine?.name || m.medicine_name,
+        dosage: m.dosage,
+        duration: m.duration
+      })) as { medicine_id: string; medicine_name: string; dosage: string; duration: string; }[];
+    },
+    enabled: !!prescriptionId
+  });
 
   return (
     <>
@@ -302,7 +315,7 @@ function PharmacyRow({ patient, onDispense }: {
       </TableCell>
       <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{patient.village}</TableCell>
       <TableCell className="text-xs text-muted-foreground">
-        {new Date(patient.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        {new Date(patient.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
       </TableCell>
       <TableCell>
         {patient.status === "Completed" ? (

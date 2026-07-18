@@ -1,10 +1,11 @@
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 import { AppError } from "../utils/app-error";
 import type { CreatePrescriptionDTO, CreateDoctorNoteDTO, CreateFollowUpDTO } from "../dtos/camp.dto";
 
 export class ConsultationService {
   async createPrescription(dto: CreatePrescriptionDTO, doctorId: string) {
-    const prescription = await prisma.prescription.create({
+    const db = getDb();
+    const prescription = await db.prescription.create({
       data: {
         doctorId,
         patientId: dto.patientId,
@@ -22,7 +23,7 @@ export class ConsultationService {
       include: { medicines: { include: { medicine: true } }, doctor: true, patient: true },
     });
 
-    await prisma.patient.update({
+    await db.patient.update({
       where: { id: dto.patientId },
       data: { status: "Waiting for Pharmacy" },
     });
@@ -31,18 +32,19 @@ export class ConsultationService {
   }
 
   async updatePrescription(prescriptionId: string, dto: CreatePrescriptionDTO, doctorId: string) {
+    const db = getDb();
     // Check if it exists
-    const rx = await prisma.prescription.findUnique({ where: { id: prescriptionId } });
+    const rx = await db.prescription.findUnique({ where: { id: prescriptionId } });
     if (!rx) throw AppError.notFound("Prescription not found");
     if (rx.doctorId !== doctorId) throw AppError.unauthorized("You can only edit your own prescriptions");
 
     // Delete existing medicines
-    await prisma.prescriptionMedicine.deleteMany({
+    await db.prescriptionMedicine.deleteMany({
       where: { prescriptionId },
     });
 
     // Update prescription with new advice and medicines
-    const updatedPrescription = await prisma.prescription.update({
+    const updatedPrescription = await db.prescription.update({
       where: { id: prescriptionId },
       data: {
         advice: dto.advice,
@@ -62,7 +64,8 @@ export class ConsultationService {
   }
 
   async getPrescription(id: string) {
-    const rx = await prisma.prescription.findUnique({
+    const db = getDb();
+    const rx = await db.prescription.findUnique({
       where: { id },
       include: {
         medicines: { include: { medicine: true } },
@@ -77,7 +80,8 @@ export class ConsultationService {
   }
 
   async createDoctorNote(dto: CreateDoctorNoteDTO, doctorId: string) {
-    return prisma.doctorNote.create({
+    const db = getDb();
+    return db.doctorNote.create({
       data: {
         prescriptionId: dto.prescriptionId,
         campId: dto.campId,
@@ -89,7 +93,8 @@ export class ConsultationService {
   }
 
   async createFollowUp(dto: CreateFollowUpDTO) {
-    return prisma.followUp.create({
+    const db = getDb();
+    return db.followUp.create({
       data: {
         patientId: dto.patientId,
         notes: dto.notes,
@@ -99,7 +104,8 @@ export class ConsultationService {
   }
 
   async getPendingFollowUps() {
-    return prisma.followUp.findMany({
+    const db = getDb();
+    return db.followUp.findMany({
       where: { completed: false, dueDate: { lte: new Date() } },
       include: { patient: true },
       orderBy: { dueDate: "asc" },
@@ -107,10 +113,12 @@ export class ConsultationService {
   }
 
   async completeFollowUp(id: string) {
-    return prisma.followUp.update({ where: { id }, data: { completed: true } });
+    const db = getDb();
+    return db.followUp.update({ where: { id }, data: { completed: true } });
   }
 
   async storeSignature(prescriptionId: string, signatureBase64: string) {
+    const db = getDb();
     const fs = await import("fs");
     const path = await import("path");
     const dir = path.join(process.cwd(), "uploads", "signatures");

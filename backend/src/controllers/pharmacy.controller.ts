@@ -4,7 +4,7 @@ import { NotificationService } from "../services/notification.service";
 import { PatientService } from "../services/patient.service";
 import { sendSuccess } from "../utils/response";
 import { AppError } from "../utils/app-error";
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 
 const pharmacyService = new PharmacyService();
 const notificationService = new NotificationService();
@@ -21,7 +21,8 @@ export class PharmacyController {
   async submitFeedback(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { patientId, campId, rating, comments } = req.body;
-      const feedback = await prisma.feedback.create({
+      const db = getDb();
+      const feedback = await db.feedback.create({
         data: { patientId, campId, rating, comments },
       });
       sendSuccess(res, feedback, "Feedback submitted", 201);

@@ -58,7 +58,7 @@ export class ConsultationController {
         campLocation: rx.camp.location,
         date: rx.camp.date.toLocaleDateString("en-IN"),
         advice: rx.advice ?? undefined,
-        medicines: rx.medicines.map((m) => ({
+        medicines: rx.medicines.map((m: any) => ({
           name: m.medicine.name,
           dosage: m.dosage,
           frequency: m.frequency,
@@ -85,7 +85,7 @@ export class ConsultationController {
         campLocation: rx.camp.location,
         date: rx.camp.date.toLocaleDateString("en-IN"),
         advice: rx.advice ?? undefined,
-        medicines: rx.medicines.map((m) => ({
+        medicines: rx.medicines.map((m: any) => ({
           name: m.medicine.name,
           dosage: m.dosage,
           frequency: m.frequency,

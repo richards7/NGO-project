@@ -11,7 +11,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
-import { PowerSyncProvider } from "@/lib/powersync/provider";
+import "@/lib/network/SyncEngine"; // Start sync engine
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -41,6 +41,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight">This page didn't load</h1>
         <p className="mt-2 text-sm text-muted-foreground">Something went wrong on our end.</p>
+        <div className="mt-4 p-4 bg-destructive/10 text-destructive text-left rounded overflow-auto max-h-64 text-xs">
+          <strong>{error.name}:</strong> {error.message}
+          <pre className="mt-2">{error.stack}</pre>
+        </div>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => { router.invalidate(); reset(); }}
@@ -100,10 +104,8 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <PowerSyncProvider>
-          <Outlet />
-          <Toaster position="top-right" richColors />
-        </PowerSyncProvider>
+        <Outlet />
+        <Toaster position="top-right" richColors />
       </AuthProvider>
     </QueryClientProvider>
   );

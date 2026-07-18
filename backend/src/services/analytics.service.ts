@@ -1,7 +1,8 @@
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 
 export class AnalyticsService {
   async getDashboardSummary(campId?: string) {
+    const db = getDb();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -15,18 +16,18 @@ export class AnalyticsService {
       totalConsultations,
       completedPatients,
     ] = await Promise.all([
-      prisma.patient.count(),
-      prisma.patient.count({ where: { createdAt: { gte: today } } }),
-      prisma.camp.count({ where: { status: "Active" } }),
-      prisma.camp.count(),
-      prisma.prescription.count(),
-      prisma.medicineTransaction.count({ where: { type: "DISPENSED" } }),
-      prisma.doctorNote.count(),
-      prisma.patient.count({ where: { status: "Completed" } }),
+      db.patient.count(),
+      db.patient.count({ where: { createdAt: { gte: today } } }),
+      db.camp.count({ where: { status: "Active" } }),
+      db.camp.count(),
+      db.prescription.count(),
+      db.medicineTransaction.count({ where: { type: "DISPENSED" } }),
+      db.doctorNote.count(),
+      db.patient.count({ where: { status: "Completed" } }),
     ]);
 
     // Inventory summary
-    const medicines = await prisma.medicine.findMany();
+    const medicines = await db.medicine.findMany();
     const totalStock = medicines.reduce((sum, m) => sum + m.stock, 0);
     const lowStockCount = medicines.filter(m => m.stock <= m.alertLevel).length;
 
@@ -45,7 +46,8 @@ export class AnalyticsService {
   }
 
   async getDiseaseDistribution() {
-    const data = await prisma.doctorNote.groupBy({
+    const db = getDb();
+    const data = await db.doctorNote.groupBy({
       by: ["diagnosis"],
       _count: { diagnosis: true },
       orderBy: { _count: { diagnosis: "desc" } },
@@ -56,7 +58,8 @@ export class AnalyticsService {
   }
 
   async getGenderDistribution() {
-    const data = await prisma.patient.groupBy({
+    const db = getDb();
+    const data = await db.patient.groupBy({
       by: ["gender"],
       _count: { gender: true },
     });
@@ -65,7 +68,8 @@ export class AnalyticsService {
   }
 
   async getAgeDistribution() {
-    const patients = await prisma.patient.findMany({ select: { age: true } });
+    const db = getDb();
+    const patients = await db.patient.findMany({ select: { age: true } });
 
     const bands: Record<string, number> = {
       "0-12": 0, "13-25": 0, "26-45": 0, "46-60": 0, "60+": 0,
@@ -83,7 +87,8 @@ export class AnalyticsService {
   }
 
   async getMostPrescribedMedicines() {
-    const data = await prisma.prescriptionMedicine.groupBy({
+    const db = getDb();
+    const data = await db.prescriptionMedicine.groupBy({
       by: ["medicineId"],
       _count: { medicineId: true },
       orderBy: { _count: { medicineId: "desc" } },
@@ -92,7 +97,7 @@ export class AnalyticsService {
 
     const result = await Promise.all(
       data.map(async (d) => {
-        const med = await prisma.medicine.findUnique({ where: { id: d.medicineId } });
+        const med = await db.medicine.findUnique({ where: { id: d.medicineId } });
         return { medicine: med?.name ?? "Unknown", count: d._count.medicineId };
       }),
     );
@@ -101,7 +106,8 @@ export class AnalyticsService {
   }
 
   async getInventoryStatus() {
-    const medicines = await prisma.medicine.findMany({
+    const db = getDb();
+    const medicines = await db.medicine.findMany({
       include: { category: true },
       orderBy: { stock: "asc" },
     });
@@ -119,7 +125,8 @@ export class AnalyticsService {
   }
 
   async getPatientsPerCamp() {
-    const camps = await prisma.camp.findMany({
+    const db = getDb();
+    const camps = await db.camp.findMany({
       include: { _count: { select: { prescriptions: true } } },
       orderBy: { date: "desc" },
     });
@@ -134,14 +141,15 @@ export class AnalyticsService {
   }
 
   async getDoctorPerformance() {
-    const data = await prisma.prescription.groupBy({
+    const db = getDb();
+    const data = await db.prescription.groupBy({
       by: ["doctorId"],
       _count: { id: true },
     });
 
     const result = await Promise.all(
       data.map(async (d) => {
-        const doctor = await prisma.user.findUnique({ where: { id: d.doctorId } });
+        const doctor = await db.user.findUnique({ where: { id: d.doctorId } });
         return { doctorName: doctor?.name ?? "Unknown", prescriptions: d._count.id };
       }),
     );
@@ -150,7 +158,8 @@ export class AnalyticsService {
   }
 
   async getFeedbackAnalytics() {
-    const feedback = await prisma.feedback.findMany();
+    const db = getDb();
+    const feedback = await db.feedback.findMany();
     const total = feedback.length;
 
     if (total === 0) return { avgRating: 0, total: 0, distribution: {} };
@@ -164,6 +173,7 @@ export class AnalyticsService {
   }
 
   async getAllFeedback(page = 1, limit = 50, search?: string) {
+    const db = getDb();
     const where = search
       ? {
           OR: [
@@ -174,7 +184,7 @@ export class AnalyticsService {
       : {};
 
     const [feedback, total] = await Promise.all([
-      prisma.feedback.findMany({
+      db.feedback.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
@@ -184,7 +194,7 @@ export class AnalyticsService {
           camp: { select: { name: true, campCode: true } },
         },
       }),
-      prisma.feedback.count({ where }),
+      db.feedback.count({ where }),
     ]);
 
     return { feedback, total };

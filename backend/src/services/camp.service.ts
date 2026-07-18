@@ -1,26 +1,29 @@
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 import { AppError } from "../utils/app-error";
 import type { CreateCampDTO, UpdateCampDTO, CreateFeedbackDTO } from "../dtos/camp.dto";
 
 export class CampService {
   async create(dto: CreateCampDTO) {
-    const existing = await prisma.camp.findUnique({ where: { campCode: dto.campCode } });
+    const db = getDb();
+    const existing = await db.camp.findUnique({ where: { campCode: dto.campCode } });
     if (existing) throw AppError.conflict(`Camp code '${dto.campCode}' already exists`);
 
-    return prisma.camp.create({
+    return db.camp.create({
       data: { ...dto, date: new Date(dto.date) },
     });
   }
 
   async findAll() {
-    return prisma.camp.findMany({
+    const db = getDb();
+    return db.camp.findMany({
       orderBy: { date: "desc" },
       include: { _count: { select: { prescriptions: true, feedback: true } } },
     });
   }
 
   async findById(id: string) {
-    const camp = await prisma.camp.findUnique({
+    const db = getDb();
+    const camp = await db.camp.findUnique({
       where: { id },
       include: {
         inventory: { include: { medicine: true } },
@@ -32,16 +35,19 @@ export class CampService {
   }
 
   async update(id: string, dto: UpdateCampDTO) {
+    const db = getDb();
     await this.findById(id);
-    return prisma.camp.update({ where: { id }, data: { ...dto, ...(dto.date ? { date: new Date(dto.date) } : {}) } });
+    return db.camp.update({ where: { id }, data: { ...dto, ...(dto.date ? { date: new Date(dto.date) } : {}) } });
   }
 
   async createFeedback(dto: CreateFeedbackDTO) {
-    return prisma.feedback.create({ data: dto });
+    const db = getDb();
+    return db.feedback.create({ data: dto });
   }
 
   async getFeedbackByCamp(campId: string) {
-    const feedback = await prisma.feedback.findMany({
+    const db = getDb();
+    const feedback = await db.feedback.findMany({
       where: { campId },
       include: { patient: true },
       orderBy: { createdAt: "desc" },

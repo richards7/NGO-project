@@ -1,15 +1,19 @@
 import { PredictionService } from "../../src/services/prediction.service";
 
-jest.mock("../../src/config/database", () => ({
-  __esModule: true,
-  default: {
+jest.mock("../../src/config/database", () => {
+  const dbMock = {
     camp: { findMany: jest.fn().mockResolvedValue([]) },
     prescription: { groupBy: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
     prescriptionMedicine: { groupBy: jest.fn().mockResolvedValue([]) },
     medicine: { findUnique: jest.fn().mockResolvedValue(null) },
     patient: { count: jest.fn().mockResolvedValue(100) },
-  },
-}));
+  };
+  return {
+    __esModule: true,
+    getDb: () => dbMock,
+    default: dbMock,
+  };
+});
 
 describe("PredictionService", () => {
   const predictionService = new PredictionService();

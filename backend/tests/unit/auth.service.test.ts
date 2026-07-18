@@ -2,9 +2,8 @@ import { AuthService } from "../../src/services/auth.service";
 import { AppError } from "../../src/utils/app-error";
 
 // Mock Prisma
-jest.mock("../../src/config/database", () => ({
-  __esModule: true,
-  default: {
+jest.mock("../../src/config/database", () => {
+  const dbMock = {
     user: {
       findUnique: jest.fn(),
       create: jest.fn(),
@@ -14,8 +13,13 @@ jest.mock("../../src/config/database", () => ({
     },
     $connect: jest.fn(),
     $disconnect: jest.fn(),
-  },
-}));
+  };
+  return {
+    __esModule: true,
+    getDb: () => dbMock,
+    default: dbMock,
+  };
+});
 
 import prisma from "../../src/config/database";
 

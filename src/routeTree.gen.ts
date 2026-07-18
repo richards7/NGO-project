@@ -22,6 +22,7 @@ import { Route as AppConsultationRouteImport } from './routes/_app.consultation'
 import { Route as AppCampsRouteImport } from './routes/_app.camps'
 import { Route as AppPatientsIndexRouteImport } from './routes/_app.patients.index'
 import { Route as AppPatientsNewRouteImport } from './routes/_app.patients.new'
+import { Route as AppPatientsIdRouteImport } from './routes/_app.patients.$id'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -87,6 +88,11 @@ const AppPatientsNewRoute = AppPatientsNewRouteImport.update({
   path: '/patients/new',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPatientsIdRoute = AppPatientsIdRouteImport.update({
+  id: '/patients/$id',
+  path: '/patients/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/queue': typeof AppQueueRoute
   '/reports': typeof AppReportsRoute
   '/vitals': typeof AppVitalsRoute
+  '/patients/$id': typeof AppPatientsIdRoute
   '/patients/new': typeof AppPatientsNewRoute
   '/patients/': typeof AppPatientsIndexRoute
 }
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/queue': typeof AppQueueRoute
   '/reports': typeof AppReportsRoute
   '/vitals': typeof AppVitalsRoute
+  '/patients/$id': typeof AppPatientsIdRoute
   '/patients/new': typeof AppPatientsNewRoute
   '/patients': typeof AppPatientsIndexRoute
 }
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/_app/queue': typeof AppQueueRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/vitals': typeof AppVitalsRoute
+  '/_app/patients/$id': typeof AppPatientsIdRoute
   '/_app/patients/new': typeof AppPatientsNewRoute
   '/_app/patients/': typeof AppPatientsIndexRoute
 }
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/queue'
     | '/reports'
     | '/vitals'
+    | '/patients/$id'
     | '/patients/new'
     | '/patients/'
   fileRoutesByTo: FileRoutesByTo
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/queue'
     | '/reports'
     | '/vitals'
+    | '/patients/$id'
     | '/patients/new'
     | '/patients'
   id:
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/_app/queue'
     | '/_app/reports'
     | '/_app/vitals'
+    | '/_app/patients/$id'
     | '/_app/patients/new'
     | '/_app/patients/'
   fileRoutesById: FileRoutesById
@@ -276,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPatientsNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/patients/$id': {
+      id: '/_app/patients/$id'
+      path: '/patients/$id'
+      fullPath: '/patients/$id'
+      preLoaderRoute: typeof AppPatientsIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -289,6 +308,7 @@ interface AppRouteChildren {
   AppQueueRoute: typeof AppQueueRoute
   AppReportsRoute: typeof AppReportsRoute
   AppVitalsRoute: typeof AppVitalsRoute
+  AppPatientsIdRoute: typeof AppPatientsIdRoute
   AppPatientsNewRoute: typeof AppPatientsNewRoute
   AppPatientsIndexRoute: typeof AppPatientsIndexRoute
 }
@@ -303,6 +323,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppQueueRoute: AppQueueRoute,
   AppReportsRoute: AppReportsRoute,
   AppVitalsRoute: AppVitalsRoute,
+  AppPatientsIdRoute: AppPatientsIdRoute,
   AppPatientsNewRoute: AppPatientsNewRoute,
   AppPatientsIndexRoute: AppPatientsIndexRoute,
 }

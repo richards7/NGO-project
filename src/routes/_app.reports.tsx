@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app-shell";
 import { Download, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { API_URL } from "@/lib/api";
+import { networkManager } from "@/lib/network/NetworkManager";
 
 export const Route = createFileRoute("/_app/reports")({
   component: ReportsPage,
@@ -23,7 +23,7 @@ function ReportsPage() {
   const handleDownload = (r: any) => {
     if (r.id === "patient") {
       // Direct download link for CSV export
-      window.open(`${API_URL}/patients/export/csv`, "_blank");
+      window.open(`${networkManager.getApiUrl()}/patients/export/csv`, "_blank");
       toast.success("Downloading Patient Statistics CSV...");
     } else {
       toast.success(`${r.name} generated`);

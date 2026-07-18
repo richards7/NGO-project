@@ -1,4 +1,4 @@
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 
 interface PredictionInput {
   location: string;
@@ -31,6 +31,7 @@ const SEASON_MULTIPLIERS: Record<string, number> = {
 
 export class PredictionService {
   async predict(input: PredictionInput): Promise<PredictionOutput> {
+    const db = getDb();
     const seasonMultiplier = SEASON_MULTIPLIERS[input.season] ?? 1.0;
 
     // ─── Step 1: Estimate expected patients ──────────────────────────────────
@@ -38,7 +39,7 @@ export class PredictionService {
 
     if (!expectedPatients) {
       // Average patients from past camps in same or similar location
-      const pastCamps = await prisma.camp.findMany({
+      const pastCamps = await db.camp.findMany({
         where: {
           status: "Completed",
           location: { contains: input.location.split(",")[0], mode: "insensitive" },
@@ -50,7 +51,7 @@ export class PredictionService {
       const campIds = input.pastCampIds ?? pastCamps.map((c) => c.id);
 
       if (campIds.length > 0) {
-        const counts = await prisma.prescription.groupBy({
+        const counts = await db.prescription.groupBy({
           by: ["campId"],
           _count: { id: true },
           where: { campId: { in: campIds } },
@@ -61,25 +62,25 @@ export class PredictionService {
         expectedPatients = Math.ceil(avg * seasonMultiplier);
       } else {
         // Global average fallback
-        const total = await prisma.patient.count();
-        const campCount = await prisma.camp.count({ where: { status: "Completed" } });
+        const total = await db.patient.count();
+        const campCount = await db.camp.count({ where: { status: "Completed" } });
         expectedPatients = Math.ceil((total / Math.max(campCount, 1)) * seasonMultiplier);
       }
     }
 
     // ─── Step 2: Compute medicine recommendation ─────────────────────────────
-    const topMedicines = await prisma.prescriptionMedicine.groupBy({
+    const topMedicines = await db.prescriptionMedicine.groupBy({
       by: ["medicineId"],
       _count: { medicineId: true },
       orderBy: { _count: { medicineId: "desc" } },
       take: 15,
     });
 
-    const totalPrescriptions = await prisma.prescription.count();
+    const totalPrescriptions = await db.prescription.count();
     const recommendations: MedicineRecommendation[] = [];
 
     for (const entry of topMedicines) {
-      const medicine = await prisma.medicine.findUnique({ where: { id: entry.medicineId } });
+      const medicine = await db.medicine.findUnique({ where: { id: entry.medicineId } });
       if (!medicine) continue;
 
       // Usage rate: prescriptions containing this medicine / total prescriptions

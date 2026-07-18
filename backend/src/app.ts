@@ -17,6 +17,7 @@ import pharmacyRoutes from "./routes/pharmacy.routes";
 import campRoutes from "./routes/camp.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import syncRoutes from "./routes/sync.routes";
+import syncCloudRoutes from "./routes/sync-cloud.routes";
 
 const app = express();
 
@@ -55,7 +56,7 @@ app.use((req, _res, next) => {
 });
 
 // ─── Health Check ──────────────────────────────────────────────────────────
-app.get("/health", (_req, res) => {
+app.get("/api/v1/health", (_req, res) => {
   res.json({ status: "ok", env: config.NODE_ENV, timestamp: new Date().toISOString() });
 });
 
@@ -66,8 +67,9 @@ app.use(`${v1}/patients`, patientRoutes);
 app.use(`${v1}/consultation`, consultationRoutes);
 app.use(`${v1}/pharmacy`, pharmacyRoutes);
 app.use(`${v1}/camps`, campRoutes);
-app.use(`${v1}/analytics`, analyticsRoutes);
-app.use(`${v1}`, syncRoutes);
+app.use("/api/v1/analytics", analyticsRoutes);
+app.use("/api/v1/sync", syncRoutes);
+app.use("/api/v1/sync-cloud", syncCloudRoutes);
 
 // ─── Swagger Docs ──────────────────────────────────────────────────────────
 app.use(

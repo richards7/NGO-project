@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/_app/vitals")({
 function VitalsPage() {
   const { patientId } = Route.useSearch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [selectedPatientId, setSelectedPatientId] = useState<string | undefined>(patientId);
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,8 +66,8 @@ function VitalsPage() {
       setSpo2(v.spo2?.toString() || "");
       setWeight(v.weight?.toString() || "");
       setHeight(v.height?.toString() || "");
-      setPregnancyStatus(v.pregnancy_status || "none");
-      setEmergency(v.emergency_condition === 1);
+      setPregnancyStatus(v.pregnancyStatus || "none");
+      setEmergency(v.emergencyCondition === 1);
       setNotes(v.notes || "");
       setIsEdit(true);
     }
@@ -95,6 +97,10 @@ function VitalsPage() {
         emergencyCondition: emergency,
         notes: notes || undefined,
       });
+
+      queryClient.invalidateQueries({ queryKey: ["vitals", patient.id] });
+      queryClient.invalidateQueries({ queryKey: ["patient", patient.id] });
+      queryClient.invalidateQueries({ queryKey: ["queue"] });
 
       toast.success(isEdit ? "Vitals updated · saved offline" : "Vitals saved · patient sent to Queue");
       navigate({ to: "/queue" });

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_app/patients/")({
 });
 
 function PatientsPage() {
+  const navigate = useNavigate();
   const { session } = useAuth();
   const isAdmin = session?.role === "admin";
   
@@ -122,20 +123,21 @@ function PatientsPage() {
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{p.village}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{p.phone}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        p.queue_priority === "highest" ? "bg-destructive/10 text-destructive border-destructive/30"
-                        : p.status === "In Consultation" ? "bg-primary/10 text-primary border-primary/30"
+                      <Badge 
+                        variant="outline" 
+                        className={
+                        p.queuePriority === "highest" ? "bg-destructive/10 text-destructive border-destructive/30"
+                        : p.status === "Registered" ? "bg-primary/10 text-primary border-primary/30"
                         : p.status === "Completed" ? "bg-success/10 text-success border-success/30"
                         : "bg-muted text-muted-foreground"
-                      }
-                    >
-                      {p.queue_priority === "highest" ? "Emergency" : p.status}
-                    </Badge>
+                      }>
+                      {p.queuePriority === "highest" ? "Emergency" : p.status}
+                      </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">View</Button>
+                    <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/patients/$id", params: { id: p.id } })}>
+                      View
+                    </Button>
                     {!isAdmin && p.status === "Registered" && (
                       <Button asChild variant="outline" size="sm" className="ml-2">
                         <Link to="/vitals" search={{ patientId: p.id }}>Add Vitals</Link>

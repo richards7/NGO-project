@@ -1,4 +1,4 @@
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 import { logger } from "../utils/logger";
 
 interface CrudEntry {
@@ -27,6 +27,7 @@ export class SyncService {
    * PowerSync sends local SQLite mutations as an array of operations.
    */
   async processPowerSyncBatch(batches: CrudEntry[], userId: string) {
+    const db = getDb();
     logger.info(`Processing PowerSync batch of ${batches.length} operations for user ${userId}`);
 
     for (const entry of batches) {
@@ -43,6 +44,7 @@ export class SyncService {
   }
 
   private async processEntry(entry: CrudEntry, userId: string) {
+    const db = getDb();
     const { op, table, id, opData } = entry;
     const data = opData ? toCamel(opData) : {};
 
@@ -50,7 +52,7 @@ export class SyncService {
     switch (table) {
       case "patients":
         if (op === "PUT" || op === "PATCH") {
-          await prisma.patient.upsert({
+          await db.patient.upsert({
             where: { id },
             update: data,
             create: {
@@ -71,13 +73,13 @@ export class SyncService {
             },
           });
         } else if (op === "DELETE") {
-          await prisma.patient.delete({ where: { id } }).catch(() => {});
+          await db.patient.delete({ where: { id } }).catch(() => {});
         }
         break;
 
       case "vitals":
         if (op === "PUT" || op === "PATCH") {
-          await prisma.vitals.upsert({
+          await db.vitals.upsert({
             where: { id },
             update: data,
             create: {
@@ -97,13 +99,13 @@ export class SyncService {
             },
           });
         } else if (op === "DELETE") {
-          await prisma.vitals.delete({ where: { id } }).catch(() => {});
+          await db.vitals.delete({ where: { id } }).catch(() => {});
         }
         break;
 
       case "prescriptions":
         if (op === "PUT" || op === "PATCH") {
-          await prisma.prescription.upsert({
+          await db.prescription.upsert({
             where: { id },
             update: data,
             create: {
@@ -119,13 +121,13 @@ export class SyncService {
             },
           });
         } else if (op === "DELETE") {
-          await prisma.prescription.delete({ where: { id } }).catch(() => {});
+          await db.prescription.delete({ where: { id } }).catch(() => {});
         }
         break;
 
       case "prescription_medicines":
         if (op === "PUT" || op === "PATCH") {
-          await prisma.prescriptionMedicine.upsert({
+          await db.prescriptionMedicine.upsert({
             where: { id },
             update: data,
             create: {
@@ -138,13 +140,13 @@ export class SyncService {
             },
           });
         } else if (op === "DELETE") {
-          await prisma.prescriptionMedicine.delete({ where: { id } }).catch(() => {});
+          await db.prescriptionMedicine.delete({ where: { id } }).catch(() => {});
         }
         break;
 
       case "camps":
         if (op === "PUT" || op === "PATCH") {
-          await prisma.camp.upsert({
+          await db.camp.upsert({
             where: { id },
             update: data,
             create: {
@@ -163,7 +165,7 @@ export class SyncService {
 
       case "feedback":
         if (op === "PUT") {
-          await prisma.feedback.upsert({
+          await db.feedback.upsert({
             where: { id },
             update: data,
             create: {
@@ -180,7 +182,7 @@ export class SyncService {
 
       case "medicine_transactions":
         if (op === "PUT") {
-          await prisma.medicineTransaction.upsert({
+          await db.medicineTransaction.upsert({
             where: { id },
             update: {},
             create: {
@@ -198,7 +200,7 @@ export class SyncService {
 
       case "medicines":
         if (op === "PUT" || op === "PATCH") {
-          await prisma.medicine.upsert({
+          await db.medicine.upsert({
             where: { id },
             update: {
               name: data.name,
@@ -221,13 +223,13 @@ export class SyncService {
             },
           });
         } else if (op === "DELETE") {
-          await prisma.medicine.delete({ where: { id } }).catch(() => {});
+          await db.medicine.delete({ where: { id } }).catch(() => {});
         }
         break;
 
       case "medicine_categories":
         if (op === "PUT" || op === "PATCH") {
-          await prisma.medicineCategory.upsert({
+          await db.medicineCategory.upsert({
             where: { id },
             update: {
               name: data.name,
@@ -250,6 +252,7 @@ export class SyncService {
 
   // Legacy pull method — unused by PowerSync, but kept for compatibility if needed.
   async pull() {
+    const db = getDb();
     return { changes: {}, serverTimestamp: new Date().toISOString() };
   }
 }

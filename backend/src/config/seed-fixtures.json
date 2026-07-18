@@ -1,0 +1,64 @@
+{
+  "roles": [
+    {
+      "id": "e98e4d3a-14d2-432d-98cf-19b8417cde6c",
+      "name": "admin",
+      "description": "System Administrator",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "06b0d912-32b0-466d-a6fa-90e8a76d8dc3",
+      "name": "doctor",
+      "description": "Medical Doctor",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "8bbbb4f8-d4de-4b14-9988-51f78cbfd976",
+      "name": "registration",
+      "description": "Registration Desk",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "c1f71a74-d4b8-4720-bc2a-17b5f1345d2e",
+      "name": "pharmacy",
+      "description": "Pharmacist",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "f58f4a3e-2b1d-482a-a9e9-d9e1f57b61a3",
+      "email": "doctor@arogya.ngo",
+      "passwordHash": "$2a$12$V.s4K1mO4i885C4FpLzUyeZ4F/H1y2gO6V/X3R8fQ5y6X1Y1y2gO2", 
+      "name": "Dr. Offline Camp",
+      "roleId": "06b0d912-32b0-466d-a6fa-90e8a76d8dc3",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "a18f4a3e-2b1d-482a-a9e9-d9e1f57b61a4",
+      "email": "admin@arogya.ngo",
+      "passwordHash": "$2a$12$V.s4K1mO4i885C4FpLzUyeZ4F/H1y2gO6V/X3R8fQ5y6X1Y1y2gO2", 
+      "name": "Admin Camp",
+      "roleId": "e98e4d3a-14d2-432d-98cf-19b8417cde6c",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "camps": [
+    {
+      "id": "c7a71a74-d4b8-4720-bc2a-17b5f1345d2e",
+      "campCode": "CMP-LOCAL-1",
+      "name": "Local Offline Camp",
+      "location": "Offline Village",
+      "date": "2024-12-01T00:00:00Z",
+      "status": "Active",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    }
+  ]
+}

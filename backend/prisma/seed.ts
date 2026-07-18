@@ -7,6 +7,43 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding medicines data...');
 
+  // Create Roles
+  const roles = ["admin", "registration", "medical_assistant", "doctor", "pharmacy"];
+  for (const roleName of roles) {
+    await prisma.role.upsert({
+      where: { name: roleName },
+      update: {},
+      create: { id: uuidv4(), name: roleName, description: `${roleName} role` },
+    });
+  }
+
+  // Create Demo Users
+  const bcrypt = require('bcryptjs');
+  const hash = await bcrypt.hash("demo1234", 12);
+  const demoUsers = [
+    { name: "Dr. Ananya Rao", email: "admin@arogya.ngo", role: "admin" },
+    { name: "Priya Sharma", email: "registration@arogya.ngo", role: "registration" },
+    { name: "Dr. Vikram Iyer", email: "vikram@arogya.ngo", role: "doctor" },
+    { name: "Suresh Kumar", email: "pharmacy@arogya.ngo", role: "pharmacy" },
+  ];
+
+  for (const u of demoUsers) {
+    const role = await prisma.role.findUnique({ where: { name: u.role } });
+    if (role) {
+      await prisma.user.upsert({
+        where: { email: u.email },
+        update: { passwordHash: hash, roleId: role.id },
+        create: {
+          id: uuidv4(),
+          email: u.email,
+          name: u.name,
+          passwordHash: hash,
+          roleId: role.id,
+        },
+      });
+    }
+  }
+
   // Create Categories
   const catFever = await prisma.medicineCategory.upsert({
     where: { name: 'Fever & Pain' },

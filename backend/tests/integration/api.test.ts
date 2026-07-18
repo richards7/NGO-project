@@ -1,4 +1,16 @@
 import request from "supertest";
+
+jest.mock("../../src/config/database", () => {
+  return {
+    __esModule: true,
+    getDb: () => ({
+      $disconnect: jest.fn(),
+      user: { findUnique: jest.fn().mockResolvedValue(null) },
+    }),
+    initDb: jest.fn(),
+  };
+});
+
 import app from "../../src/app";
 
 describe("Health Check", () => {

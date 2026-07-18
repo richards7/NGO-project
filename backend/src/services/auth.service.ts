@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import prisma from "../config/database";
+import { getDb } from "../config/database";
 import { config } from "../config/env";
 import { AppError } from "../utils/app-error";
 import type { LoginDTO, RegisterUserDTO } from "../dtos/auth.dto";
@@ -8,7 +8,8 @@ import type { AuthPayload } from "../middlewares/auth";
 
 export class AuthService {
   async login(dto: LoginDTO) {
-    const user = await prisma.user.findUnique({
+    const db = getDb();
+    const user = await db.user.findUnique({
       where: { email: dto.email },
       include: { role: true },
     });
@@ -36,15 +37,16 @@ export class AuthService {
   }
 
   async register(dto: RegisterUserDTO) {
-    const existing = await prisma.user.findUnique({ where: { email: dto.email } });
+    const db = getDb();
+    const existing = await db.user.findUnique({ where: { email: dto.email } });
     if (existing) throw AppError.conflict("Email already registered");
 
-    const role = await prisma.role.findUnique({ where: { name: dto.roleName } });
+    const role = await db.role.findUnique({ where: { name: dto.roleName } });
     if (!role) throw AppError.badRequest(`Role '${dto.roleName}' does not exist`);
 
     const hash = await bcrypt.hash(dto.password, 12);
 
-    const user = await prisma.user.create({
+    const user = await db.user.create({
       data: { email: dto.email, name: dto.name, passwordHash: hash, roleId: role.id },
       include: { role: true },
     });
@@ -53,6 +55,7 @@ export class AuthService {
   }
 
   async refreshToken(token: string) {
+    const db = getDb();
     try {
       const payload = jwt.verify(token, config.JWT_REFRESH_SECRET) as AuthPayload;
 

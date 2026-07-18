@@ -252,7 +252,7 @@ function ConsultationPage() {
             {history.length === 0 && <div className="text-xs text-muted-foreground">No previous history</div>}
             {history.map((h: any) => (
               <div key={h.id} className="flex gap-3 text-xs">
-                <div className="w-16 shrink-0 text-muted-foreground">{new Date(h.created_at).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}</div>
+                <div className="w-16 shrink-0 text-muted-foreground">{new Date(h.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}</div>
                 <div className="flex-1">{h.advice || "Consultation completed"}</div>
               </div>
             ))}
