@@ -29,9 +29,9 @@ async function startCampServer() {
     await initDb("sqlite", dbPath);
 
     // 2. Start HTTP Server
-    const port = process.env.PORT;
-    const server = app.listen(port, () => {
-      logger.info(`✅ Local Camp Server running on http://localhost:${port}`);
+    const port = parseInt(process.env.PORT || "5000", 10);
+    const server = app.listen(port, "0.0.0.0", () => {
+      logger.info(`✅ Local Camp Server running on http://0.0.0.0:${port}`);
     });
 
     // 3. Start Connectivity Watcher

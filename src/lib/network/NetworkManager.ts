@@ -7,9 +7,15 @@ export class NetworkManager {
   private listeners: Set<(state: ConnectionState) => void> = new Set();
   private pingInterval: any = null;
 
-  constructor(cloudUrl: string, campUrl: string = "http://localhost:5000/api/v1") {
+  constructor(cloudUrl: string, campUrl?: string) {
     this.cloudUrl = cloudUrl;
-    this.campUrl = campUrl;
+    
+    if (campUrl) {
+      this.campUrl = campUrl;
+    } else {
+      const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
+      this.campUrl = `http://${hostname}:5000/api/v1`;
+    }
     
     // Initial check
     this.checkConnection();
@@ -50,20 +56,21 @@ export class NetworkManager {
   }
 
   private async checkConnection() {
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      this.updateState("OFFLINE");
-      return;
-    }
+    // In an offline hotspot, navigator.onLine might be false because there is no external internet.
+    // However, we still want to check if the local Camp Server is reachable!
+    const isBrowserOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 
-    try {
-      // Check Cloud first
-      const cloudRes = await fetch(`${this.cloudUrl}/health`, { method: "GET", cache: "no-store", signal: AbortSignal.timeout(3000) });
-      if (cloudRes.ok) {
-        this.updateState("CLOUD");
-        return;
+    if (isBrowserOnline) {
+      try {
+        // Check Cloud first
+        const cloudRes = await fetch(`${this.cloudUrl}/health`, { method: "GET", cache: "no-store", signal: AbortSignal.timeout(3000) });
+        if (cloudRes.ok) {
+          this.updateState("CLOUD");
+          return;
+        }
+      } catch (e) {
+        // Cloud is unreachable
       }
-    } catch (e) {
-      // Cloud is unreachable
     }
 
     try {

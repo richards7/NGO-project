@@ -66,7 +66,7 @@ export function requirePermission(permissionName: string) {
 
     const db = getDb();
     let role;
-    if (db.mode === "prisma") {
+    if (db.mode === "postgres") {
       const p = db as any; // PrismaAdapter has raw prisma
       role = await p.prisma.role.findFirst({
         where: { name: req.user.role },
@@ -84,7 +84,7 @@ export function requirePermission(permissionName: string) {
     }
 
     // Adapt for sqlite which might return different structure
-    const hasPermission = db.mode === "prisma" 
+    const hasPermission = db.mode === "postgres" 
       ? role.permissions.some((p: any) => p.name === permissionName)
       : role.permissions?.some((p: any) => p.name === permissionName);
     if (!hasPermission) {

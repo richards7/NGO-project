@@ -26,7 +26,13 @@ export class PatientService {
     const token = `T-${String(this.tokenCounter).padStart(3, "0")}`;
 
     const patient = await db.patient.create({
-      data: { ...dto, token, status: "Registered" },
+      data: { 
+        ...dto, 
+        token, 
+        status: "Registered",
+        queuePriority: "normal",
+        queuedAt: new Date()
+      },
       include: { family: true, vitals: true },
     });
 
@@ -255,7 +261,7 @@ export class PatientService {
 
     const patients = await db.patient.findMany({
       where: {
-        status: { in: ["Vitals Captured", "Waiting", "In Consultation"] },
+        status: { in: ["Registered", "Vitals Captured", "Waiting", "In Consultation"] },
       },
       orderBy: [
         { queuedAt: "asc" },

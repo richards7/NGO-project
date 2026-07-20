@@ -51,23 +51,26 @@ function LoginPage() {
   return (
     <div className="min-h-dvh grid lg:grid-cols-2 bg-background">
       {/* Left brand panel */}
-      <div className="hidden lg:flex relative overflow-hidden gradient-brand text-white p-12 flex-col justify-between">
-        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_60%,white,transparent_45%)]" />
-        <div className="relative flex items-center gap-3">
-          <div className="size-11 rounded-2xl bg-white/15 backdrop-blur grid place-items-center">
-            <Activity className="size-6" strokeWidth={2.5} />
+      <div className="hidden lg:flex relative overflow-hidden text-white flex-col justify-between bg-zinc-900">
+        <div className="absolute inset-0">
+          <img src="https://i.ibb.co/5XH8Zhp4/frederick-shaw-X2hd-LTr-U7-Pg-unsplash.jpg" alt="CampCare Hero" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+        </div>
+        <div className="relative flex items-center gap-3 p-12">
+          <div className="size-11 rounded-2xl bg-white/20 backdrop-blur grid place-items-center shadow-sm border border-white/10">
+            <Activity className="size-6 text-white" strokeWidth={2.5} />
           </div>
-          <div>
-            <div className="font-bold text-lg leading-tight">Arogya Camp OS</div>
-            <div className="text-xs text-white/70 uppercase tracking-widest">Medical NGO Platform</div>
+          <div className="drop-shadow-md">
+            <div className="font-bold text-xl leading-tight">CampCare</div>
+            <div className="text-xs text-white/90 uppercase tracking-widest font-medium">Medical NGO Platform</div>
           </div>
         </div>
 
-        <div className="relative space-y-6">
-          <h1 className="text-4xl xl:text-5xl font-bold leading-tight tracking-tight">
+        <div className="relative space-y-6 p-12">
+          <h1 className="text-4xl xl:text-5xl font-bold leading-tight tracking-tight drop-shadow-lg">
             Care that reaches<br />every village.
           </h1>
-          <p className="text-white/80 max-w-md">
+          <p className="text-white/90 max-w-md drop-shadow-md font-medium text-base">
             End-to-end camp management — registration, vitals, consultations, pharmacy and analytics — designed to work even without internet.
           </p>
           <div className="grid grid-cols-3 gap-3 max-w-md pt-4">
@@ -76,15 +79,15 @@ function LoginPage() {
               { k: "58k", v: "Patients served" },
               { k: "99.9%", v: "Offline uptime" },
             ].map((s) => (
-              <div key={s.v} className="rounded-2xl bg-white/10 backdrop-blur px-4 py-3">
+              <div key={s.v} className="rounded-2xl bg-black/40 backdrop-blur-md px-4 py-3 border border-white/10 shadow-lg">
                 <div className="text-2xl font-bold">{s.k}</div>
-                <div className="text-[11px] text-white/70 uppercase tracking-wider">{s.v}</div>
+                <div className="text-[11px] text-white/80 uppercase tracking-wider font-medium">{s.v}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative flex items-center gap-2 text-xs text-white/70">
+        <div className="relative flex items-center gap-2 text-xs text-white/80 font-medium p-12">
           <ShieldCheck className="size-4" /> HIPAA-aligned · AES-256 encrypted · WCAG AA
         </div>
       </div>
@@ -97,7 +100,7 @@ function LoginPage() {
               <Activity className="size-6" />
             </div>
             <div>
-              <div className="font-bold text-lg">Arogya Camp OS</div>
+              <div className="font-bold text-lg">CampCare</div>
               <div className="text-xs text-muted-foreground uppercase tracking-widest">Medical NGO</div>
             </div>
           </div>
