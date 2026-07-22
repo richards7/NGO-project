@@ -55,6 +55,15 @@ export class NetworkManager {
     await this.checkConnection();
   }
 
+  private async pingUrl(url: string, timeoutMs: number): Promise<boolean> {
+    try {
+      const res = await fetch(url, { method: "GET", cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
   private async checkConnection() {
     // In an offline hotspot, navigator.onLine might be false because there is no external internet.
     // However, we still want to check if the local Camp Server is reachable!
@@ -73,15 +82,29 @@ export class NetworkManager {
       }
     }
 
-    try {
-      // Check Camp Server
-      const campRes = await fetch(`${this.campUrl}/health`, { method: "GET", cache: "no-store", signal: AbortSignal.timeout(2000) });
-      if (campRes.ok) {
-        this.updateState("CAMP");
-        return;
-      }
-    } catch (e) {
-      // Camp server is unreachable
+    // Try Camp Server with multiple possible URLs and a generous timeout
+    // Build a list of candidate camp URLs to try
+    const campUrls = new Set<string>();
+    campUrls.add(this.campUrl);
+
+    // Also try common local addresses in case the hostname-derived URL doesn't work
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      campUrls.add(`http://${hostname}:5000/api/v1`);
+      campUrls.add(`http://localhost:5000/api/v1`);
+      campUrls.add(`http://127.0.0.1:5000/api/v1`);
+    }
+
+    // Try all camp URLs concurrently — first one to succeed wins
+    const campChecks = Array.from(campUrls).map((url) => this.pingUrl(`${url}/health`, 5000));
+    const results = await Promise.all(campChecks);
+
+    if (results.some((ok) => ok)) {
+      // Update campUrl to the one that succeeded so API calls use it
+      const successIndex = results.findIndex((ok) => ok);
+      this.campUrl = Array.from(campUrls)[successIndex];
+      this.updateState("CAMP");
+      return;
     }
 
     this.updateState("OFFLINE");

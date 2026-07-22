@@ -37,6 +37,7 @@ function NewPatient() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(null);
+  const [patientId, setPatientId] = useState<string | null>(null);
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { name: "", age: 0, gender: "M", blood: "O+", phone: "", email: "", village: "", address: "", emergency: "", members: 1 },
@@ -54,6 +55,7 @@ function NewPatient() {
       });
 
       setToken(result.token);
+      setPatientId(result.id);
       queryClient.invalidateQueries({ queryKey: ["patients"] });
       queryClient.invalidateQueries({ queryKey: ["queue"] });
       toast.success(`Patient registered · Token ${result.token} issued`);
@@ -98,7 +100,8 @@ function NewPatient() {
           <div className="mt-8 flex flex-wrap justify-center gap-2">
             <Button variant="outline" className="gap-2 rounded-xl"><Copy className="size-4" /> Copy Token</Button>
             <Button variant="outline" className="gap-2 rounded-xl"><Printer className="size-4" /> Print Card</Button>
-            <Button className="gap-2 rounded-xl" onClick={() => navigate({ to: "/queue" })}>Send to Queue →</Button>
+            <Button variant="outline" className="gap-2 rounded-xl text-primary border-primary/30" onClick={() => navigate({ to: `/vitals?patientId=${patientId}` })}>Save & Add Vitals</Button>
+            <Button className="gap-2 rounded-xl" onClick={() => navigate({ to: "/queue" })}>Direct Send to Queue →</Button>
           </div>
         </Card>
       </div>
