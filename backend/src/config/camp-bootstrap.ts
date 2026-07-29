@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS "users" (
   "password_hash" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "role_id" TEXT,
+  "camp_id" TEXT,
   "refresh_token" TEXT,
   "created_at" TEXT NOT NULL,
   "updated_at" TEXT NOT NULL,
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS "camps" (
   "location" TEXT NOT NULL,
   "date" TEXT NOT NULL,
   "status" TEXT DEFAULT 'Scheduled',
+  "ngo_id" TEXT,
   "created_at" TEXT NOT NULL,
   "updated_at" TEXT NOT NULL,
   "_version" INTEGER DEFAULT 1,
@@ -61,6 +63,7 @@ CREATE TABLE IF NOT EXISTS "patients" (
   "queue_priority" TEXT,
   "queue_reason" TEXT,
   "queued_at" TEXT,
+  "camp_id" TEXT,
   "created_at" TEXT NOT NULL,
   "updated_at" TEXT NOT NULL,
   "_version" INTEGER DEFAULT 1,
@@ -295,14 +298,14 @@ export function bootstrapDb(db: Database.Database) {
         insertRole.run(role.id, role.name, role.description, role.createdAt, role.updatedAt);
       }
 
-      const insertUser = db.prepare('INSERT INTO "users" (id, email, password_hash, name, role_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+      const insertUser = db.prepare('INSERT INTO "users" (id, email, password_hash, name, role_id, camp_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
       for (const user of data.users || []) {
-        insertUser.run(user.id, user.email, user.passwordHash, user.name, user.roleId, user.createdAt, user.updatedAt);
+        insertUser.run(user.id, user.email, user.passwordHash, user.name, user.roleId, null, user.createdAt, user.updatedAt);
       }
 
-      const insertCamp = db.prepare('INSERT INTO "camps" (id, camp_code, name, location, date, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+      const insertCamp = db.prepare('INSERT INTO "camps" (id, camp_code, name, location, date, status, ngo_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
       for (const camp of data.camps || []) {
-        insertCamp.run(camp.id, camp.campCode, camp.name, camp.location, camp.date, camp.status, camp.createdAt, camp.updatedAt);
+        insertCamp.run(camp.id, camp.campCode, camp.name, camp.location, camp.date, camp.status, null, camp.createdAt, camp.updatedAt);
       }
 
       logger.info("[CampBootstrap] Seeding complete.");

@@ -7,7 +7,8 @@ const campService = new CampService();
 export class CampController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const camp = await campService.create(req.body);
+      const data = { ...req.body, ngoId: req.user?.userId };
+      const camp = await campService.create(data);
       sendSuccess(res, camp, "Camp created", 201);
     } catch (err) { next(err); }
   }

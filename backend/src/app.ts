@@ -18,6 +18,7 @@ import campRoutes from "./routes/camp.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import syncRoutes from "./routes/sync.routes";
 import syncCloudRoutes from "./routes/sync-cloud.routes";
+import exportRoutes from "./routes/export.routes";
 
 const app = express();
 
@@ -70,13 +71,14 @@ app.use(`${v1}/camps`, campRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/sync", syncRoutes);
 app.use("/api/v1/sync-cloud", syncCloudRoutes);
+app.use("/api/v1/export", exportRoutes);
 
 // ─── Swagger Docs ──────────────────────────────────────────────────────────
 app.use(
   "/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(swaggerDefinition, {
-    customSiteTitle: "Arogya Camp OS API",
+    customSiteTitle: "CampCare Camp OS API",
     swaggerOptions: { persistAuthorization: true },
   }),
 );

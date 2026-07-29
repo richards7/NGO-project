@@ -128,4 +128,26 @@ export class PharmacyService {
       include: { medicine: { include: { category: true } } },
     });
   }
+
+  async createMedicine(data: { name: string; categoryId: string; batchNumber?: string; expiryDate?: Date; stock: number }) {
+    const db = getDb();
+    
+    // Default batch number and expiry date if not provided
+    const batchNumber = data.batchNumber || "BATCH-001";
+    const expiryDate = data.expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
+    
+    return db.medicine.upsert({
+      where: { name: data.name },
+      update: {
+        stock: { increment: data.stock }
+      },
+      create: {
+        name: data.name,
+        categoryId: data.categoryId,
+        batchNumber,
+        expiryDate,
+        stock: data.stock,
+      }
+    });
+  }
 }

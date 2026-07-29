@@ -34,7 +34,7 @@ export const createCampSchema = z.object({
   name: z.string().min(2),
   location: z.string().min(2),
   date: z.string().datetime(),
-  campCode: z.string().min(1),
+  ngoId: z.string().uuid().optional(),
 });
 
 export const updateCampSchema = createCampSchema.partial().extend({

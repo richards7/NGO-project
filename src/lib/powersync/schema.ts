@@ -20,6 +20,7 @@ const users = new Table({
   email: column.text,
   name: column.text,
   role_id: column.text,
+  camp_id: column.text,
   created_at: column.text,
   updated_at: column.text,
 });
@@ -48,6 +49,7 @@ const camps = new Table(
     location: column.text,
     date: column.text,
     status: column.text, // "Scheduled" | "Active" | "Completed"
+    ngo_id: column.text,
     created_at: column.text,
     updated_at: column.text,
   },
@@ -68,6 +70,7 @@ const patients = new Table(
     queue_reason: column.text,
     queued_at: column.text,
     family_id: column.text,
+    camp_id: column.text,
     created_at: column.text,
     updated_at: column.text,
   },

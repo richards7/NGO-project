@@ -32,7 +32,7 @@
   "users": [
     {
       "id": "f58f4a3e-2b1d-482a-a9e9-d9e1f57b61a3",
-      "email": "doctor@arogya.ngo",
+      "email": "doctor@campcare.ngo",
       "passwordHash": "$2a$12$V.s4K1mO4i885C4FpLzUyeZ4F/H1y2gO6V/X3R8fQ5y6X1Y1y2gO2", 
       "name": "Dr. Offline Camp",
       "roleId": "06b0d912-32b0-466d-a6fa-90e8a76d8dc3",
@@ -41,7 +41,7 @@
     },
     {
       "id": "a18f4a3e-2b1d-482a-a9e9-d9e1f57b61a4",
-      "email": "admin@arogya.ngo",
+      "email": "admin@campcare.ngo",
       "passwordHash": "$2a$12$V.s4K1mO4i885C4FpLzUyeZ4F/H1y2gO6V/X3R8fQ5y6X1Y1y2gO2", 
       "name": "Admin Camp",
       "roleId": "e98e4d3a-14d2-432d-98cf-19b8417cde6c",

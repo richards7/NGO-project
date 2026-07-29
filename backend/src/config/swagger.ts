@@ -1,11 +1,11 @@
 export const swaggerDefinition = {
   openapi: "3.0.0",
   info: {
-    title: "Arogya Camp OS API",
+    title: "CampCare Camp OS API",
     version: "1.0.0",
     description:
-      "Production-ready REST API for the Arogya Camp OS — Medical NGO Camp Management Platform. Manages patient flows, consultations, pharmacy dispensing, analytics, offline sync, and medicine demand prediction.",
-    contact: { name: "Arogya NGO Dev Team" },
+      "Production-ready REST API for the CampCare Camp OS — Medical NGO Camp Management Platform. Manages patient flows, consultations, pharmacy dispensing, analytics, offline sync, and medicine demand prediction.",
+    contact: { name: "CampCare NGO Dev Team" },
   },
   servers: [{ url: "/api/v1", description: "v1 API" }],
   components: {

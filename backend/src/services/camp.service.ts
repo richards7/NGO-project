@@ -3,13 +3,27 @@ import { AppError } from "../utils/app-error";
 import type { CreateCampDTO, UpdateCampDTO, CreateFeedbackDTO } from "../dtos/camp.dto";
 
 export class CampService {
+  private codeCounter = 0;
+
   async create(dto: CreateCampDTO) {
     const db = getDb();
-    const existing = await db.camp.findUnique({ where: { campCode: dto.campCode } });
-    if (existing) throw AppError.conflict(`Camp code '${dto.campCode}' already exists`);
+    
+    // Get the current max camp code
+    const lastCamp = await db.camp.findFirst({
+      where: { campCode: { startsWith: "C-" } },
+      orderBy: { createdAt: "desc" },
+    });
+    
+    if (lastCamp?.campCode) {
+      const num = parseInt(lastCamp.campCode.replace("C-", ""), 10);
+      if (!isNaN(num) && num >= this.codeCounter) this.codeCounter = num;
+    }
+    
+    this.codeCounter++;
+    const campCode = `C-${String(this.codeCounter).padStart(3, "0")}`;
 
     return db.camp.create({
-      data: { ...dto, date: new Date(dto.date) },
+      data: { ...dto, campCode, date: new Date(dto.date) },
     });
   }
 
@@ -17,7 +31,10 @@ export class CampService {
     const db = getDb();
     return db.camp.findMany({
       orderBy: { date: "desc" },
-      include: { _count: { select: { prescriptions: true, feedback: true } } },
+      include: { 
+        users: true,
+        _count: { select: { prescriptions: true, feedback: true } } 
+      },
     });
   }
 

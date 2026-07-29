@@ -1,15 +1,15 @@
 import app from "./app";
 import { config } from "./config/env";
-import prisma from "./config/database";
+import { initDb, getDb } from "./config/database";
 import { logger } from "./utils/logger";
 
 async function bootstrap() {
   try {
-    await prisma.$connect();
+    await initDb();
     logger.info("✅ Database connected");
 
     const server = app.listen(config.PORT, () => {
-      logger.info(`🚀 Arogya Camp OS Backend running on http://localhost:${config.PORT}`);
+      logger.info(`🚀 CampCare Camp OS Backend running on http://localhost:${config.PORT}`);
       logger.info(`📖 API Docs: http://localhost:${config.PORT}/api-docs`);
       logger.info(`🌍 Environment: ${config.NODE_ENV}`);
     });
@@ -18,7 +18,7 @@ async function bootstrap() {
     process.on("SIGTERM", async () => {
       logger.info("SIGTERM received. Shutting down gracefully...");
       server.close(async () => {
-        await prisma.$disconnect();
+        await getDb().$disconnect();
         logger.info("Server closed.");
         process.exit(0);
       });
@@ -26,7 +26,7 @@ async function bootstrap() {
 
     process.on("SIGINT", async () => {
       logger.info("SIGINT received. Shutting down...");
-      await prisma.$disconnect();
+      await getDb().$disconnect();
       process.exit(0);
     });
   } catch (err) {

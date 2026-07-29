@@ -43,7 +43,7 @@ export class PDFService {
         .fillColor("#1d4ed8")
         .fontSize(22)
         .font("Helvetica-Bold")
-        .text("Arogya Camp OS", 50, 50)
+        .text("CampCare Camp OS", 50, 50)
         .fillColor("#6b7280")
         .fontSize(10)
         .font("Helvetica")

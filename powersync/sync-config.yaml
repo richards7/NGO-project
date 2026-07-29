@@ -14,9 +14,10 @@ streams:
   users:
     auto_subscribe: true
     query: >
-      SELECT id, email, name, "roleId" as role_id,
+      SELECT id, email, name, "roleId" as role_id, "campId" as camp_id,
              "createdAt" as created_at, "updatedAt" as updated_at
       FROM "User"
+      WHERE request.jwt()->>'role' = 'admin' OR "campId" = request.jwt()->>'camp_id'
 
   medicine_categories:
     auto_subscribe: true
@@ -36,8 +37,10 @@ streams:
     auto_subscribe: true
     query: >
       SELECT id, "campCode" as camp_code, name, location, date, status,
+             "ngoId" as ngo_id,
              "createdAt" as created_at, "updatedAt" as updated_at
       FROM "Camp"
+      WHERE (request.jwt()->>'role' = 'admin' AND "ngoId" = request.jwt()->>'userId') OR id = request.jwt()->>'camp_id'
 
   patients:
     auto_subscribe: true
@@ -45,8 +48,10 @@ streams:
       SELECT id, token, name, age, gender, village, phone, priority, status,
              "queuePriority" as queue_priority, "queueReason" as queue_reason,
              "queuedAt" as queued_at, "familyId" as family_id,
+             "campId" as camp_id,
              "createdAt" as created_at, "updatedAt" as updated_at
       FROM "Patient"
+      WHERE request.jwt()->>'camp_id' IS NULL OR "campId" = request.jwt()->>'camp_id'
 
   families:
     auto_subscribe: true
@@ -66,12 +71,14 @@ streams:
   vitals:
     auto_subscribe: true
     query: >
-      SELECT id, bp, sugar, temp, pulse, spo2, height, weight,
-             "pregnancyStatus" as pregnancy_status,
-             "emergencyCondition"::int as emergency_condition,
-             notes, "patientId" as patient_id,
-             "createdAt" as created_at
-      FROM "Vitals"
+      SELECT v.id, v.bp, v.sugar, v.temp, v.pulse, v.spo2, v.height, v.weight,
+             v."pregnancyStatus" as pregnancy_status,
+             v."emergencyCondition"::int as emergency_condition,
+             v.notes, v."patientId" as patient_id,
+             v."createdAt" as created_at
+      FROM "Vitals" v
+      JOIN "Patient" p ON p.id = v."patientId"
+      WHERE request.jwt()->>'camp_id' IS NULL OR p."campId" = request.jwt()->>'camp_id'
 
   prescriptions:
     auto_subscribe: true
@@ -80,14 +87,17 @@ streams:
              "campId" as camp_id, "qrImage" as qr_image, "pdfPath" as pdf_path,
              advice, "createdAt" as created_at, "updatedAt" as updated_at
       FROM "Prescription"
+      WHERE request.jwt()->>'camp_id' IS NULL OR "campId" = request.jwt()->>'camp_id'
 
   prescription_medicines:
     auto_subscribe: true
     query: >
-      SELECT id, "prescriptionId" as prescription_id,
-             "medicineId" as medicine_id,
-             dosage, frequency, duration
-      FROM "PrescriptionMedicine"
+      SELECT pm.id, pm."prescriptionId" as prescription_id,
+             pm."medicineId" as medicine_id,
+             pm.dosage, pm.frequency, pm.duration
+      FROM "PrescriptionMedicine" pm
+      JOIN "Prescription" p ON p.id = pm."prescriptionId"
+      WHERE request.jwt()->>'camp_id' IS NULL OR p."campId" = request.jwt()->>'camp_id'
 
   medicines:
     auto_subscribe: true
@@ -104,6 +114,7 @@ streams:
       SELECT id, "campId" as camp_id, "medicineId" as medicine_id,
              quantity, reserved, "updatedAt" as updated_at
       FROM "Inventory"
+      WHERE request.jwt()->>'camp_id' IS NULL OR "campId" = request.jwt()->>'camp_id'
 
   medicine_transactions:
     auto_subscribe: true
@@ -112,6 +123,7 @@ streams:
              quantity, type, "userId" as user_id,
              "createdAt" as created_at
       FROM "MedicineTransaction"
+      WHERE request.jwt()->>'camp_id' IS NULL OR "campId" = request.jwt()->>'camp_id'
 
   doctor_notes:
     auto_subscribe: true
@@ -120,14 +132,17 @@ streams:
              "campId" as camp_id, notes, diagnosis,
              "doctorId" as doctor_id, "createdAt" as created_at
       FROM "DoctorNote"
+      WHERE request.jwt()->>'camp_id' IS NULL OR "campId" = request.jwt()->>'camp_id'
 
   follow_ups:
     auto_subscribe: true
     query: >
-      SELECT id, "patientId" as patient_id, notes,
-             "dueDate" as due_date, completed::int,
-             "createdAt" as created_at
-      FROM "FollowUp"
+      SELECT f.id, f."patientId" as patient_id, f.notes,
+             f."dueDate" as due_date, f.completed::int,
+             f."createdAt" as created_at
+      FROM "FollowUp" f
+      JOIN "Patient" p ON p.id = f."patientId"
+      WHERE request.jwt()->>'camp_id' IS NULL OR p."campId" = request.jwt()->>'camp_id'
 
   feedback:
     auto_subscribe: true
@@ -135,6 +150,7 @@ streams:
       SELECT id, "patientId" as patient_id, "campId" as camp_id,
              rating, comments, "createdAt" as created_at
       FROM "Feedback"
+      WHERE request.jwt()->>'camp_id' IS NULL OR "campId" = request.jwt()->>'camp_id'
 
   notifications:
     auto_subscribe: true

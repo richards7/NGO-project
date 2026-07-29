@@ -7,7 +7,7 @@ export async function apiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<{ success: boolean; data: T; message?: string }> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("arogya.token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem("campcare.token") : null;
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

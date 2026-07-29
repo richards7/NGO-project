@@ -36,7 +36,7 @@ router.post("/login", validate(loginSchema), ctrl.login.bind(ctrl));
  *     tags: [Auth]
  *     summary: Register a new user (Admin only)
  */
-router.post("/register", authenticate, validate(registerUserSchema), ctrl.register.bind(ctrl));
+router.post("/register", validate(registerUserSchema), ctrl.register.bind(ctrl));
 
 /**
  * @swagger
@@ -72,6 +72,7 @@ router.get("/powersync-token", authenticate, (req: Request, res: Response) => {
       user_id: user.userId,
       email: user.email,
       role: user.role,
+      camp_id: user.campId,
     },
     config.JWT_SECRET,
     { expiresIn: "1h" },

@@ -15,6 +15,8 @@ model User {
   name         String
   roleId       String
   role         Role          @relation(fields: [roleId], references: [id])
+  campId       String?       
+  camp         Camp?         @relation("CampUsers", fields: [campId], references: [id])
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   transactions MedicineTransaction[]
@@ -23,6 +25,7 @@ model User {
   reports      Report[]
   auditLogs    AuditLog[]
   notifications Notification[]
+  campsCreated Camp[]        @relation("NgoCamps")
 }
 
 // 2. Role Model
@@ -52,12 +55,16 @@ model Camp {
   status       String        @default("Scheduled") // "Scheduled", "Active", "Completed"
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  ngoId        String?
+  ngo          User?         @relation("NgoCamps", fields: [ngoId], references: [id])
   prescriptions Prescription[]
   inventory    Inventory[]
   transactions MedicineTransaction[]
   doctorNotes  DoctorNote[]
   feedback     Feedback[]
   reports      Report[]
+  patients     Patient[]
+  users        User[]        @relation("CampUsers")
 }
 
 // 5. Patient Model
@@ -84,6 +91,8 @@ model Patient {
   feedback       Feedback[]
   diseases       Disease[]      @relation("PatientDiseases")
   allergies      Allergy[]      @relation("PatientAllergies")
+  campId         String?
+  camp           Camp?          @relation(fields: [campId], references: [id])
 }
 
 // 6. Family Model

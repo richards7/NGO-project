@@ -1,0 +1,10 @@
+port: 8080
+database:
+  uri: postgresql://postgres:password@postgres:5432/arogya_camp_db
+sync:
+  config_path: /config/sync-config.yaml
+auth:
+  jwt:
+    secret: arogya_jwt_secret_change_in_production
+storage:
+  type: postgresql

@@ -20,8 +20,8 @@ export const ROLE_HOME: Record<Role, string> = {
 };
 
 export const DEMO_USERS = [
-  { name: "Dr. Ananya Rao", email: "admin@arogya.ngo", role: "admin" as Role },
-  { name: "Priya Sharma", email: "registration@arogya.ngo", role: "registration" as Role },
-  { name: "Dr. Vikram Iyer", email: "vikram@arogya.ngo", role: "doctor" as Role },
-  { name: "Suresh Kumar", email: "pharmacy@arogya.ngo", role: "pharmacy" as Role },
+  { name: "Dr. Ananya Rao", email: "admin@campcare.ngo", role: "admin" as Role },
+  { name: "Priya Sharma", email: "registration@campcare.ngo", role: "registration" as Role },
+  { name: "Dr. Vikram Iyer", email: "vikram@campcare.ngo", role: "doctor" as Role },
+  { name: "Suresh Kumar", email: "pharmacy@campcare.ngo", role: "pharmacy" as Role },
 ];

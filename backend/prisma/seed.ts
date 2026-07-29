@@ -21,10 +21,10 @@ async function main() {
   const bcrypt = require('bcryptjs');
   const hash = await bcrypt.hash("demo1234", 12);
   const demoUsers = [
-    { name: "Dr. Ananya Rao", email: "admin@arogya.ngo", role: "admin" },
-    { name: "Priya Sharma", email: "registration@arogya.ngo", role: "registration" },
-    { name: "Dr. Vikram Iyer", email: "vikram@arogya.ngo", role: "doctor" },
-    { name: "Suresh Kumar", email: "pharmacy@arogya.ngo", role: "pharmacy" },
+    { name: "Dr. Ananya Rao", email: "admin@campcare.ngo", role: "admin" },
+    { name: "Priya Sharma", email: "registration@campcare.ngo", role: "registration" },
+    { name: "Dr. Vikram Iyer", email: "vikram@campcare.ngo", role: "doctor" },
+    { name: "Suresh Kumar", email: "pharmacy@campcare.ngo", role: "pharmacy" },
   ];
 
   for (const u of demoUsers) {

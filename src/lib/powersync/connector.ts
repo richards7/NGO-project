@@ -13,10 +13,10 @@ import {
 import { networkManager } from "../network/NetworkManager";
 
 function getAuthToken(): string | null {
-  return localStorage.getItem("arogya.token");
+  return localStorage.getItem("campcare.token");
 }
 
-export class ArogyaBackendConnector implements PowerSyncBackendConnector {
+export class CampCareBackendConnector implements PowerSyncBackendConnector {
   async fetchCredentials() {
     const token = getAuthToken();
     if (!token) {

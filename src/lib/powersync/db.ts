@@ -2,7 +2,7 @@
  * PowerSync database singleton.
  *
  * Creates a single PowerSyncDatabase backed by SQLite via WebAssembly + OPFS.
- * The database file `arogya-camp.db` persists in the browser's
+ * The database file `campcare-camp.db` persists in the browser's
  * Origin Private File System across page reloads — even without internet.
  */
 import { PowerSyncDatabase } from "@powersync/web";
@@ -17,7 +17,7 @@ export function getDb(): PowerSyncDatabase {
   if (!_db) {
     _db = new PowerSyncDatabase({
       schema: AppSchema,
-      database: { dbFilename: "arogya-camp.db" },
+      database: { dbFilename: "campcare-camp.db" },
     });
   }
   return _db;

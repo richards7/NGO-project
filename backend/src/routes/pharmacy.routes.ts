@@ -13,6 +13,7 @@ router.post("/feedback", authorize("pharmacy", "admin"), ctrl.submitFeedback.bin
 router.post("/stock", authorize("admin", "pharmacy"), ctrl.addStock.bind(ctrl));
 
 router.get("/medicines", ctrl.getMedicines.bind(ctrl));
+router.post("/medicines", authorize("admin", "pharmacy"), ctrl.createMedicine.bind(ctrl));
 router.get("/medicines/low-stock", authorize("admin", "pharmacy"), ctrl.getLowStockAlerts.bind(ctrl));
 router.get("/medicines/expiring", authorize("admin", "pharmacy"), ctrl.getExpiringMedicines.bind(ctrl));
 

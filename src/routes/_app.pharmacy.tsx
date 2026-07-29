@@ -78,9 +78,76 @@ function PharmacyPage() {
       toast.success("Medicine added successfully");
       setAddMedOpen(false);
       setNewMed({ name: "", category: "category-id-1", stock: 100 });
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
     } catch (e: any) {
       toast.error("Failed to add medicine");
     }
+  };
+
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const csv = event.target?.result as string;
+        const lines = csv.split('\n').filter(l => l.trim() !== '');
+        if (lines.length === 0) return toast.error("Empty CSV file");
+
+        const headerLine = lines[0].toLowerCase();
+        const hasHeader = headerLine.includes('name');
+        const dataLines = hasHeader ? lines.slice(1) : lines;
+        
+        // Determine column indices if headers exist, otherwise assume Name, Category, Stock or Name, Stock
+        let nameIdx = 0;
+        let catIdx = 1;
+        let stockIdx = 2;
+        
+        if (hasHeader) {
+          const headers = headerLine.split(',').map(h => h.trim());
+          nameIdx = headers.findIndex(h => h === 'name');
+          catIdx = headers.findIndex(h => h === 'category');
+          stockIdx = headers.findIndex(h => h === 'stock');
+        }
+
+        let count = 0;
+        for (const line of dataLines) {
+          const cols = line.split(',').map(s => s?.trim());
+          const name = cols[nameIdx !== -1 ? nameIdx : 0];
+          
+          let stockVal = 0;
+          let categoryId = "category-id-1";
+          
+          if (cols.length === 2 && !hasHeader) {
+            // Assume format: Name, Stock
+            stockVal = parseInt(cols[1]) || 0;
+          } else {
+            // Use header indices
+            const rawCat = catIdx !== -1 ? cols[catIdx] : undefined;
+            categoryId = rawCat || "category-id-1";
+            const rawStock = stockIdx !== -1 ? cols[stockIdx] : cols[cols.length - 1]; // fallback to last column
+            stockVal = parseInt(rawStock || "0") || 0;
+          }
+
+          if (name && !isNaN(stockVal)) {
+            await createMedicine({
+              name,
+              categoryId,
+              stock: stockVal
+            });
+            count++;
+          }
+        }
+        toast.success(`Successfully uploaded ${count} medicines`);
+        queryClient.invalidateQueries({ queryKey: ["inventory"] });
+      } catch (err: any) {
+        console.error("Bulk upload error:", err);
+        toast.error(`Upload failed: ${err.message || "Unknown error"}`);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   return (
@@ -142,28 +209,36 @@ function PharmacyPage() {
           <Card className="card-elevated">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold">Medicine Inventory</h3>
-              <Dialog open={addMedOpen} onOpenChange={setAddMedOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm">Add Medicine</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader><DialogTitle>Add New Medicine</DialogTitle></DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div>
-                      <Label>Medicine Name</Label>
-                      <Input value={newMed.name} onChange={(e) => setNewMed({ ...newMed, name: e.target.value })} />
+              <div className="flex items-center gap-2">
+                <div>
+                  <input type="file" accept=".csv" id="csv-upload" className="hidden" onChange={handleBulkUpload} />
+                  <Label htmlFor="csv-upload" className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
+                    Upload CSV
+                  </Label>
+                </div>
+                <Dialog open={addMedOpen} onOpenChange={setAddMedOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">Add Medicine</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Add New Medicine</DialogTitle></DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div>
+                        <Label>Medicine Name</Label>
+                        <Input value={newMed.name} onChange={(e) => setNewMed({ ...newMed, name: e.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Initial Stock Quantity</Label>
+                        <Input type="number" value={newMed.stock} onChange={(e) => setNewMed({ ...newMed, stock: parseInt(e.target.value) || 0 })} />
+                      </div>
                     </div>
-                    <div>
-                      <Label>Initial Stock Quantity</Label>
-                      <Input type="number" value={newMed.stock} onChange={(e) => setNewMed({ ...newMed, stock: parseInt(e.target.value) || 0 })} />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setAddMedOpen(false)}>Cancel</Button>
-                    <Button onClick={handleAddMedicine}>Save Medicine</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setAddMedOpen(false)}>Cancel</Button>
+                      <Button onClick={handleAddMedicine}>Save Medicine</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <Table>

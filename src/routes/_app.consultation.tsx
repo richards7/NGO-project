@@ -75,7 +75,7 @@ function ConsultationPage() {
 
   const sendToPharmacy = async () => {
     if (!patient) return toast.error("No patient selected");
-    if (rx.length === 0) return toast.error("Add at least one medicine");
+    if (rx.length === 0 && !advice.trim()) return toast.error("Please add a medicine or provide some advice");
     const activeCamp = (camps ?? []).find((c: any) => c.status === "Active") || (camps ?? [])[0];
     if (!activeCamp) return toast.error("No active camp found");
 
@@ -138,7 +138,7 @@ function ConsultationPage() {
         <Card className="card-elevated p-6 md:p-10 bg-card min-h-[900px]">
           <header className="flex items-start justify-between border-b pb-4">
             <div>
-              <div className="text-2xl font-bold gradient-brand bg-clip-text text-transparent">Arogya Camp OS</div>
+              <div className="text-2xl font-bold gradient-brand bg-clip-text text-transparent">CampCare Camp OS</div>
               <div className="text-xs text-muted-foreground mt-0.5">Rural Wellness Camp · {(camps ?? []).find((c: any) => c.status === "Active")?.location || "Nandigama, AP"}</div>
             </div>
             <div className="text-right text-xs">

@@ -78,7 +78,7 @@ export class SyncEngine {
     
     // Refresh token from localStorage if missing
     if (!headers.Authorization) {
-      const token = localStorage.getItem("arogya.token");
+      const token = localStorage.getItem("campcare.token");
       if (token) headers.Authorization = `Bearer ${token}`;
     }
 

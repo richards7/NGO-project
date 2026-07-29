@@ -21,7 +21,7 @@ import {
   type ReactNode,
 } from "react";
 import { getDb } from "./db";
-import { ArogyaBackendConnector } from "./connector";
+import { CampCareBackendConnector } from "./connector";
 
 // ── Sync status context ────────────────────────────────────────────────
 
@@ -77,9 +77,9 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
         setReady(true);
 
         // Only connect if we have an auth token
-        const token = localStorage.getItem("arogya.token");
+        const token = localStorage.getItem("campcare.token");
         if (token) {
-          const connector = new ArogyaBackendConnector();
+          const connector = new CampCareBackendConnector();
           await db.connect(connector);
         }
       } catch (err) {
@@ -131,11 +131,11 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
 
   const triggerSync = useCallback(async () => {
     try {
-      const token = localStorage.getItem("arogya.token");
+      const token = localStorage.getItem("campcare.token");
       if (!token) return;
 
       if (!db.connected) {
-        const connector = new ArogyaBackendConnector();
+        const connector = new CampCareBackendConnector();
         await db.connect(connector);
       }
     } catch (err) {

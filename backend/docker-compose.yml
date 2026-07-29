@@ -38,7 +38,7 @@ services:
       - logs_data:/app/logs
 
   powersync:
-    image: journeyapps/powersync-service:latest
+    image: journeyapps/powersync-service:1.20.0
     container_name: arogya_powersync
     restart: unless-stopped
     depends_on:

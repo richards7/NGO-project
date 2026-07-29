@@ -68,6 +68,7 @@ export class SyncService {
               queuePriority: data.queuePriority,
               queueReason: data.queueReason,
               queuedAt: data.queuedAt ? new Date(data.queuedAt) : null,
+              campId: data.campId,
               createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
               updatedAt: new Date(),
             },

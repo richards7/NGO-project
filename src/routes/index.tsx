@@ -19,8 +19,8 @@ function LoginPage() {
   const { session, ready, login } = useAuth();
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>("admin");
-  const [email, setEmail] = useState(DEMO_USERS[0].email);
-  const [password, setPassword] = useState("demo1234");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
 
   useEffect(() => {
@@ -29,8 +29,8 @@ function LoginPage() {
 
   const onRoleChange = (r: Role) => {
     setRole(r);
-    const u = DEMO_USERS.find((u) => u.role === r);
-    if (u) setEmail(u.email);
+    setEmail("");
+    setPassword("");
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -40,7 +40,7 @@ function LoginPage() {
       return;
     }
     try {
-      const s = await login(email, password);
+      const s = await login(email, password, "");
       toast.success(`Welcome, ${s.name.split(" ")[0]}`);
       navigate({ to: ROLE_HOME[s.role] });
     } catch (err: any) {
@@ -73,18 +73,6 @@ function LoginPage() {
           <p className="text-white/90 max-w-md drop-shadow-md font-medium text-base">
             End-to-end camp management — registration, vitals, consultations, pharmacy and analytics — designed to work even without internet.
           </p>
-          <div className="grid grid-cols-3 gap-3 max-w-md pt-4">
-            {[
-              { k: "142+", v: "Camps run" },
-              { k: "58k", v: "Patients served" },
-              { k: "99.9%", v: "Offline uptime" },
-            ].map((s) => (
-              <div key={s.v} className="rounded-2xl bg-black/40 backdrop-blur-md px-4 py-3 border border-white/10 shadow-lg">
-                <div className="text-2xl font-bold">{s.k}</div>
-                <div className="text-[11px] text-white/80 uppercase tracking-wider font-medium">{s.v}</div>
-              </div>
-            ))}
-          </div>
         </div>
 
         <div className="relative flex items-center gap-2 text-xs text-white/80 font-medium p-12">
@@ -132,7 +120,7 @@ function LoginPage() {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9 h-11" placeholder="you@ngo.org" />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9 h-11" />
               </div>
             </div>
             <div className="space-y-1.5">
@@ -147,6 +135,7 @@ function LoginPage() {
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-9 h-11" />
               </div>
             </div>
+
             <div className="flex items-center gap-2">
               <Checkbox id="remember" checked={remember} onCheckedChange={(v) => setRemember(!!v)} />
               <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">Remember me on this device</Label>
@@ -156,15 +145,11 @@ function LoginPage() {
             </Button>
           </form>
 
-          <Card className="mt-6 p-4 bg-muted/40 border-dashed">
-            <div className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-2">Demo credentials</div>
-            <div className="text-xs text-muted-foreground">
-              Any role · password <code className="text-foreground font-mono">demo1234</code>
-            </div>
-          </Card>
-
-          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <WifiOff className="size-3.5" /> Works offline · syncs automatically
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <button type="button" onClick={() => navigate({ to: "/register" })} className="text-primary font-medium hover:underline">
+              Register here
+            </button>
           </div>
         </div>
       </div>

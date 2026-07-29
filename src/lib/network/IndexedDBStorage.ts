@@ -35,7 +35,7 @@ class IndexedDBStorage {
       this.dbPromise = Promise.resolve(null);
       return;
     }
-    this.dbPromise = openDB<CampDB>("ArogyaCampDB", 1, {
+    this.dbPromise = openDB<CampDB>("CampCareCampDB", 1, {
       upgrade(db) {
         if (!db.objectStoreNames.contains("mutations")) {
           const mutationStore = db.createObjectStore("mutations", {

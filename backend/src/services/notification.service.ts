@@ -62,8 +62,8 @@ export class NotificationService {
   async sendPrescriptionEmail(to: string, patientName: string, pdfPath: string): Promise<void> {
     await this.sendEmail({
       to,
-      subject: `Your Prescription — Arogya Camp OS`,
-      text: `Dear ${patientName},\n\nYour prescription from Arogya Camp OS is attached.\n\nStay healthy!\n— Arogya Camp Team`,
+      subject: `Your Prescription — CampCare Camp OS`,
+      text: `Dear ${patientName},\n\nYour prescription from CampCare Camp OS is attached.\n\nStay healthy!\n— CampCare Camp Team`,
       attachmentPath: pdfPath,
     });
   }
@@ -71,19 +71,19 @@ export class NotificationService {
   async sendPrescriptionSMS(phone: string, patientName: string, prescriptionId: string): Promise<void> {
     await this.sendSMS({
       to: phone,
-      message: `Hello ${patientName}, your prescription (${prescriptionId}) is ready. Collect your medicines from the pharmacy counter. — Arogya Camp OS`,
+      message: `Hello ${patientName}, your prescription (${prescriptionId}) is ready. Collect your medicines from the pharmacy counter. — CampCare Camp OS`,
     });
   }
 
   async sendFollowUpReminder(phone: string, email: string, patientName: string, dueDate: string): Promise<void> {
     await this.sendSMS({
       to: phone,
-      message: `Hello ${patientName}, you have a follow-up appointment on ${dueDate}. Please visit the camp. — Arogya Camp OS`,
+      message: `Hello ${patientName}, you have a follow-up appointment on ${dueDate}. Please visit the camp. — CampCare Camp OS`,
     });
     await this.sendEmail({
       to: email,
-      subject: "Follow-up Reminder — Arogya Camp OS",
-      text: `Dear ${patientName},\n\nThis is a reminder for your follow-up on ${dueDate}.\n\n— Arogya Camp Team`,
+      subject: "Follow-up Reminder — CampCare Camp OS",
+      text: `Dear ${patientName},\n\nThis is a reminder for your follow-up on ${dueDate}.\n\n— CampCare Camp Team`,
     });
   }
 }

@@ -123,7 +123,6 @@ export interface CreateCampInput {
   name: string;
   location: string;
   date: string;
-  campCode?: string;
 }
 
 export async function createCamp(input: CreateCampInput) {

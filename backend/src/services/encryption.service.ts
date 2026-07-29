@@ -15,7 +15,7 @@ export class EncryptionService {
     
     // Derive a stable 32-byte key using a static salt so it's consistent across restarts
     // In a real implementation, salt should be stored or uniquely generated per camp
-    const salt = Buffer.from("arogya_camp_static_salt_for_key_derivation", "utf8");
+    const salt = Buffer.from("campcare_camp_static_salt_for_key_derivation", "utf8");
     this.key = crypto.pbkdf2Sync(secret, salt, 100000, 32, "sha512");
   }
 

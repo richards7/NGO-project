@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Activity className="size-5" strokeWidth={2.5} />
           </div>
           <div className="leading-tight">
-            <div className="font-bold text-base">Arogya</div>
+            <div className="font-bold text-base">CampCare</div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Camp OS</div>
           </div>
         </div>
@@ -137,7 +137,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Activity className="size-5" />
             </div>
             <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground min-w-0">
-              <span>Arogya</span>
+              <span>CampCare</span>
               <ChevronRight className="size-3.5" />
               <span className="text-foreground font-medium truncate">{current?.label ?? "Home"}</span>
             </div>

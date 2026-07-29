@@ -85,4 +85,20 @@ export class PharmacyController {
       sendSuccess(res, inventory);
     } catch (err) { next(err); }
   }
+
+  async createMedicine(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw AppError.unauthorized();
+      const { name, categoryId, batchNumber, expiryDate, stock } = req.body;
+      const parsedExpiry = expiryDate ? new Date(expiryDate) : undefined;
+      const medicine = await pharmacyService.createMedicine({
+        name,
+        categoryId,
+        batchNumber,
+        expiryDate: parsedExpiry,
+        stock
+      });
+      sendSuccess(res, medicine, "Medicine created successfully", 201);
+    } catch (err) { next(err); }
+  }
 }

@@ -11,12 +11,12 @@ export interface Session {
 interface AuthContextValue {
   session: Session | null;
   ready: boolean;
-  login: (email: string, password?: string) => Promise<Session>;
+  login: (email: string, password?: string, campCode?: string) => Promise<Session>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const KEY = "arogya.session";
+const KEY = "campcare.session";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -32,15 +32,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  const login = useCallback(async (email: string, password = "demo1234"): Promise<Session> => {
+  const login = useCallback(async (email: string, password = "demo1234", campCode?: string): Promise<Session> => {
     const res = await apiRequest("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, campCode }),
     });
 
     const { accessToken, refreshToken, user } = res.data;
-    localStorage.setItem("arogya.token", accessToken);
-    localStorage.setItem("arogya.refreshToken", refreshToken);
+    localStorage.setItem("campcare.token", accessToken);
+    localStorage.setItem("campcare.refreshToken", refreshToken);
 
     const s: Session = { name: user.name, email: user.email, role: user.role as Role };
     localStorage.setItem(KEY, JSON.stringify(s));
@@ -50,8 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem(KEY);
-    localStorage.removeItem("arogya.token");
-    localStorage.removeItem("arogya.refreshToken");
+    localStorage.removeItem("campcare.token");
+    localStorage.removeItem("campcare.refreshToken");
     setSession(null);
   }, []);
 
@@ -90,7 +90,7 @@ export function useOnlineStatus() {
 export function useTheme() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   useEffect(() => {
-    const stored = (localStorage.getItem("arogya.theme") as "light" | "dark" | null) ?? "light";
+    const stored = (localStorage.getItem("campcare.theme") as "light" | "dark" | null) ?? "light";
     setTheme(stored);
     document.documentElement.classList.toggle("dark", stored === "dark");
   }, []);
@@ -98,7 +98,7 @@ export function useTheme() {
     const next = theme === "light" ? "dark" : "light";
     setTheme(next);
     document.documentElement.classList.toggle("dark", next === "dark");
-    localStorage.setItem("arogya.theme", next);
+    localStorage.setItem("campcare.theme", next);
   };
   return { theme, toggle };
 }

@@ -4,7 +4,8 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --host",
+    "dev": "vite dev --host --port 5173",
+    "dev:all": "concurrently \"cd backend && docker compose up -d postgres powersync && npm run dev\" \"npm run dev\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
@@ -79,6 +80,7 @@
     "@types/react-dom": "^19.2.0",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^5.2.0",
+    "concurrently": "^10.0.3",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",

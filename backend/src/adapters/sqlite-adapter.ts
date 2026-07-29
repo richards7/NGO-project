@@ -56,6 +56,8 @@ const MODELS: Record<string, ModelDef> = {
     table: "users",
     relations: {
       role: { fk: "roleId", table: "roles", model: "role", type: "one" },
+      camp: { fk: "campId", table: "camps", model: "camp", type: "one" },
+      campsCreated: { fk: "ngoId", table: "camps", model: "camp", type: "many" },
       transactions: { fk: "userId", table: "medicine_transactions", model: "medicineTransaction", type: "many" },
       doctorNotes: { fk: "doctorId", table: "doctor_notes", model: "doctorNote", type: "many" },
       prescriptions: { fk: "doctorId", table: "prescriptions", model: "prescription", type: "many" },
@@ -79,12 +81,15 @@ const MODELS: Record<string, ModelDef> = {
   camp: {
     table: "camps",
     relations: {
+      ngo: { fk: "ngoId", table: "users", model: "user", type: "one" },
+      users: { fk: "campId", table: "users", model: "user", type: "many" },
       prescriptions: { fk: "campId", table: "prescriptions", model: "prescription", type: "many" },
       inventory: { fk: "campId", table: "inventory", model: "inventory", type: "many" },
       transactions: { fk: "campId", table: "medicine_transactions", model: "medicineTransaction", type: "many" },
       doctorNotes: { fk: "campId", table: "doctor_notes", model: "doctorNote", type: "many" },
       feedback: { fk: "campId", table: "feedback", model: "feedback", type: "many" },
       reports: { fk: "campId", table: "reports", model: "report", type: "many" },
+      patients: { fk: "campId", table: "patients", model: "patient", type: "many" },
     },
     uniques: [["campCode"]],
   },
@@ -92,6 +97,7 @@ const MODELS: Record<string, ModelDef> = {
     table: "patients",
     relations: {
       family: { fk: "familyId", table: "families", model: "family", type: "one" },
+      camp: { fk: "campId", table: "camps", model: "camp", type: "one" },
       vitals: { fk: "patientId", table: "vitals", model: "vitals", type: "many" },
       prescriptions: { fk: "patientId", table: "prescriptions", model: "prescription", type: "many" },
       followUps: { fk: "patientId", table: "follow_ups", model: "followUp", type: "many" },
@@ -318,6 +324,12 @@ function buildWhere(where: WhereCondition | undefined, tableAlias?: string): Whe
         // Case-insensitive contains
         clauses.push(`LOWER(${col}) LIKE LOWER(?)`);
         params.push(`%${op.contains}%`);
+      } else if ("startsWith" in op) {
+        clauses.push(`LOWER(${col}) LIKE LOWER(?)`);
+        params.push(`${op.startsWith}%`);
+      } else if ("endsWith" in op) {
+        clauses.push(`LOWER(${col}) LIKE LOWER(?)`);
+        params.push(`%${op.endsWith}`);
       } else if ("in" in op && Array.isArray(op.in)) {
         const placeholders = op.in.map(() => "?").join(", ");
         clauses.push(`${col} IN (${placeholders})`);
