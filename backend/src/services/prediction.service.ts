@@ -1,7 +1,7 @@
 import { getDb } from "../config/database";
 
 interface PredictionInput {
-  location: string;
+  district: string;
   season: "summer" | "monsoon" | "winter" | "spring";
   expectedPatients?: number;
   pastCampIds?: string[];
@@ -38,11 +38,11 @@ export class PredictionService {
     let expectedPatients = input.expectedPatients ?? 0;
 
     if (!expectedPatients) {
-      // Average patients from past camps in same or similar location
+      // Average patients from past camps in same or similar district
       const pastCamps = await db.camp.findMany({
         where: {
           status: "Completed",
-          location: { contains: input.location.split(",")[0], mode: "insensitive" },
+          district: { contains: input.district.split(",")[0], mode: "insensitive" },
         },
         take: 10,
       });

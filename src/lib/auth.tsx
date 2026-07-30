@@ -11,7 +11,7 @@ export interface Session {
 interface AuthContextValue {
   session: Session | null;
   ready: boolean;
-  login: (email: string, password?: string, campCode?: string) => Promise<Session>;
+  login: (email: string, password?: string, campCode?: string, roleName?: string) => Promise<Session>;
   logout: () => void;
 }
 
@@ -32,10 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  const login = useCallback(async (email: string, password = "demo1234", campCode?: string): Promise<Session> => {
+  const login = useCallback(async (email: string, password = "demo1234", campCode?: string, roleName?: string): Promise<Session> => {
     const res = await apiRequest("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password, campCode }),
+      body: JSON.stringify({ email, password, campCode, roleName }),
     });
 
     const { accessToken, refreshToken, user } = res.data;

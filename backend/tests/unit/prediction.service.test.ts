@@ -20,7 +20,7 @@ describe("PredictionService", () => {
 
   it("should return a prediction output with required fields", async () => {
     const result = await predictionService.predict({
-      location: "Nandigama",
+      district: "Nandigama",
       season: "monsoon",
       expectedPatients: 200,
     });
@@ -35,7 +35,7 @@ describe("PredictionService", () => {
 
   it("should apply seasonal multiplier for monsoon", async () => {
     const result = await predictionService.predict({
-      location: "Test",
+      district: "Test",
       season: "monsoon",
       expectedPatients: 100,
     });

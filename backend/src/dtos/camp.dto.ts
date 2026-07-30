@@ -32,8 +32,12 @@ export const dispenseMedicineSchema = z.object({
 
 export const createCampSchema = z.object({
   name: z.string().min(2),
-  location: z.string().min(2),
-  date: z.string().datetime(),
+  address: z.string().min(2),
+  district: z.string().min(2),
+  state: z.string().min(2),
+  pincode: z.string().min(5),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
   ngoId: z.string().uuid().optional(),
 });
 

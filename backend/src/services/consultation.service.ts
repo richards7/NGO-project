@@ -1,8 +1,11 @@
 import { getDb } from "../config/database";
 import { AppError } from "../utils/app-error";
 import type { CreatePrescriptionDTO, CreateDoctorNoteDTO, CreateFollowUpDTO } from "../dtos/camp.dto";
+import { ExcelSyncService } from "./excel-sync.service";
 
 export class ConsultationService {
+  private excelSync = ExcelSyncService.getInstance();
+
   async createPrescription(dto: CreatePrescriptionDTO, doctorId: string) {
     const db = getDb();
     const prescription = await db.prescription.create({
@@ -27,6 +30,9 @@ export class ConsultationService {
       where: { id: dto.patientId },
       data: { status: "Waiting for Pharmacy" },
     });
+
+    // Sync workbook
+    this.excelSync.syncWorkbook(dto.campId).catch(() => {});
 
     return prescription;
   }
@@ -81,7 +87,7 @@ export class ConsultationService {
 
   async createDoctorNote(dto: CreateDoctorNoteDTO, doctorId: string) {
     const db = getDb();
-    return db.doctorNote.create({
+    const note = await db.doctorNote.create({
       data: {
         prescriptionId: dto.prescriptionId,
         campId: dto.campId,
@@ -90,6 +96,11 @@ export class ConsultationService {
         doctorId,
       },
     });
+
+    // Sync workbook
+    this.excelSync.syncWorkbook(dto.campId).catch(() => {});
+
+    return note;
   }
 
   async createFollowUp(dto: CreateFollowUpDTO) {

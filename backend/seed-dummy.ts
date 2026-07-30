@@ -1,19 +1,20 @@
 import { getDb, initDb } from "./src/config/database";
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
 
 const uuidv4 = () => crypto.randomUUID();
 
 async function seedDummyData() {
-  await initDb("sqlite");
+  await initDb((process.env.DB_MODE as any) || "postgres");
   const db = getDb();
   console.log("Seeding dummy data...");
 
   // 1. Camps
   const campIds = [uuidv4(), uuidv4(), uuidv4()];
   const camps = [
-    { id: campIds[0], campCode: "CAMP-2023-01", name: "Rural Health Checkup", location: "Village A", date: "2023-10-01", status: "Completed" },
-    { id: campIds[1], campCode: "CAMP-2023-02", name: "Eye Camp", location: "Village B", date: "2024-12-05", status: "Active" },
-    { id: campIds[2], campCode: "CAMP-2023-03", name: "General Checkup", location: "Village C", date: "2025-01-15", status: "Scheduled" }
+    { id: campIds[0], campCode: "CMP-2023-0001", name: "Rural Health Checkup", address: "Village A", district: "Nellore", state: "Andhra Pradesh", pincode: "524001", startDate: new Date("2023-10-01"), endDate: new Date("2023-10-05"), status: "Completed" },
+    { id: campIds[1], campCode: "CMP-2023-0002", name: "Eye Camp", address: "Village B", district: "Nellore", state: "Andhra Pradesh", pincode: "524002", startDate: new Date("2024-12-05"), endDate: new Date("2024-12-10"), status: "Active" },
+    { id: campIds[2], campCode: "CMP-2023-0003", name: "General Checkup", address: "Village C", district: "Nellore", state: "Andhra Pradesh", pincode: "524003", startDate: new Date("2025-01-15"), endDate: new Date("2025-01-20"), status: "Scheduled" }
   ];
 
   for (const c of camps) {
@@ -94,7 +95,7 @@ async function seedDummyData() {
           name: m.name,
           categoryId: category.id,
           batchNumber: `BATCH-${Math.floor(Math.random() * 1000)}`,
-          expiryDate: "2026-12-31",
+          expiryDate: new Date("2026-12-31T00:00:00Z").toISOString(),
           stock: m.stock,
           alertLevel: 50
         }
@@ -114,6 +115,51 @@ async function seedDummyData() {
   }
 
   console.log("Dummy data seeding completed!");
+
+  // 4. Default Users
+  const roles = ["admin", "registration", "medical_assistant", "doctor", "pharmacy"];
+  for (const roleName of roles) {
+    const r = await db.role.findUnique({ where: { name: roleName } });
+    if (!r) {
+      await db.role.create({ data: { id: uuidv4(), name: roleName, description: roleName } });
+    }
+  }
+
+  const hash = await bcrypt.hash("password123", 12);
+  const adminRole = await db.role.findUnique({ where: { name: "admin" } });
+  if (adminRole) {
+    const existingAdmin = await db.user.findUnique({ where: { email: "admin@campcare.org" } });
+    if (!existingAdmin) {
+      await db.user.create({
+        data: {
+          id: uuidv4(),
+          email: "admin@campcare.org",
+          name: "Default Admin",
+          passwordHash: hash,
+          roleId: adminRole.id
+        }
+      });
+      console.log("Created default admin user: admin@campcare.org / password123");
+    }
+  }
+
+  const doctorRole = await db.role.findUnique({ where: { name: "doctor" } });
+  if (doctorRole) {
+    const existingDoctor = await db.user.findUnique({ where: { email: "doctor@campcare.org" } });
+    if (!existingDoctor) {
+      await db.user.create({
+        data: {
+          id: uuidv4(),
+          email: "doctor@campcare.org",
+          name: "Default Doctor",
+          passwordHash: hash,
+          roleId: doctorRole.id,
+          campId: campIds[1] // CMP-2023-0002
+        }
+      });
+      console.log("Created default doctor user: doctor@campcare.org / password123 / Camp: CMP-2023-0002");
+    }
+  }
 }
 
 seedDummyData().catch(console.error);

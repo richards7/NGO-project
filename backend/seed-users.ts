@@ -5,7 +5,7 @@ import crypto from "crypto";
 const uuidv4 = () => crypto.randomUUID();
 
 async function seed() {
-  await initDb("sqlite");
+  await initDb("postgres");
   const db = getDb();
   console.log("Seeding roles and users...");
 

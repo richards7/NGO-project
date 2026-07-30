@@ -121,8 +121,12 @@ export async function createFeedback(input: CreateFeedbackInput) {
 
 export interface CreateCampInput {
   name: string;
-  location: string;
-  date: string;
+  address: string;
+  district: string;
+  state: string;
+  pincode: string;
+  startDate: string;
+  endDate: string;
 }
 
 export async function createCamp(input: CreateCampInput) {

@@ -139,7 +139,10 @@ function ConsultationPage() {
           <header className="flex items-start justify-between border-b pb-4">
             <div>
               <div className="text-2xl font-bold gradient-brand bg-clip-text text-transparent">CampCare Camp OS</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Rural Wellness Camp · {(camps ?? []).find((c: any) => c.status === "Active")?.location || "Nandigama, AP"}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Rural Wellness Camp · {(() => {
+                const active = (camps ?? []).find((c: any) => c.status === "Active");
+                return active ? `${active.district}, ${active.state}` : "Nandigama, AP";
+              })()}</div>
             </div>
             <div className="text-right text-xs">
               <div className="font-semibold">{session?.name || "Dr. Vikram Iyer"}</div>

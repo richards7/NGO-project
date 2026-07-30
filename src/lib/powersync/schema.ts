@@ -46,8 +46,12 @@ const camps = new Table(
   {
     camp_code: column.text,
     name: column.text,
-    location: column.text,
-    date: column.text,
+    address: column.text,
+    district: column.text,
+    state: column.text,
+    pincode: column.text,
+    start_date: column.text,
+    end_date: column.text,
     status: column.text, // "Scheduled" | "Active" | "Completed"
     ngo_id: column.text,
     created_at: column.text,

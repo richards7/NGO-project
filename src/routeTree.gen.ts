@@ -24,6 +24,7 @@ import { Route as AppCampsRouteImport } from './routes/_app.camps'
 import { Route as AppPatientsIndexRouteImport } from './routes/_app.patients.index'
 import { Route as AppPatientsNewRouteImport } from './routes/_app.patients.new'
 import { Route as AppPatientsIdRouteImport } from './routes/_app.patients.$id'
+import { Route as AppCampsIdRouteImport } from './routes/_app.camps.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -99,11 +100,16 @@ const AppPatientsIdRoute = AppPatientsIdRouteImport.update({
   path: '/patients/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCampsIdRoute = AppCampsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppCampsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/register': typeof RegisterRoute
-  '/camps': typeof AppCampsRoute
+  '/camps': typeof AppCampsRouteWithChildren
   '/consultation': typeof AppConsultationRoute
   '/dashboard': typeof AppDashboardRoute
   '/feedback': typeof AppFeedbackRoute
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/queue': typeof AppQueueRoute
   '/reports': typeof AppReportsRoute
   '/vitals': typeof AppVitalsRoute
+  '/camps/$id': typeof AppCampsIdRoute
   '/patients/$id': typeof AppPatientsIdRoute
   '/patients/new': typeof AppPatientsNewRoute
   '/patients/': typeof AppPatientsIndexRoute
@@ -119,7 +126,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/register': typeof RegisterRoute
-  '/camps': typeof AppCampsRoute
+  '/camps': typeof AppCampsRouteWithChildren
   '/consultation': typeof AppConsultationRoute
   '/dashboard': typeof AppDashboardRoute
   '/feedback': typeof AppFeedbackRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/queue': typeof AppQueueRoute
   '/reports': typeof AppReportsRoute
   '/vitals': typeof AppVitalsRoute
+  '/camps/$id': typeof AppCampsIdRoute
   '/patients/$id': typeof AppPatientsIdRoute
   '/patients/new': typeof AppPatientsNewRoute
   '/patients': typeof AppPatientsIndexRoute
@@ -137,7 +145,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/register': typeof RegisterRoute
-  '/_app/camps': typeof AppCampsRoute
+  '/_app/camps': typeof AppCampsRouteWithChildren
   '/_app/consultation': typeof AppConsultationRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/feedback': typeof AppFeedbackRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/_app/queue': typeof AppQueueRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/vitals': typeof AppVitalsRoute
+  '/_app/camps/$id': typeof AppCampsIdRoute
   '/_app/patients/$id': typeof AppPatientsIdRoute
   '/_app/patients/new': typeof AppPatientsNewRoute
   '/_app/patients/': typeof AppPatientsIndexRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/queue'
     | '/reports'
     | '/vitals'
+    | '/camps/$id'
     | '/patients/$id'
     | '/patients/new'
     | '/patients/'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/queue'
     | '/reports'
     | '/vitals'
+    | '/camps/$id'
     | '/patients/$id'
     | '/patients/new'
     | '/patients'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/_app/queue'
     | '/_app/reports'
     | '/_app/vitals'
+    | '/_app/camps/$id'
     | '/_app/patients/$id'
     | '/_app/patients/new'
     | '/_app/patients/'
@@ -315,11 +327,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPatientsIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/camps/$id': {
+      id: '/_app/camps/$id'
+      path: '/$id'
+      fullPath: '/camps/$id'
+      preLoaderRoute: typeof AppCampsIdRouteImport
+      parentRoute: typeof AppCampsRoute
+    }
   }
 }
 
+interface AppCampsRouteChildren {
+  AppCampsIdRoute: typeof AppCampsIdRoute
+}
+
+const AppCampsRouteChildren: AppCampsRouteChildren = {
+  AppCampsIdRoute: AppCampsIdRoute,
+}
+
+const AppCampsRouteWithChildren = AppCampsRoute._addFileChildren(
+  AppCampsRouteChildren,
+)
+
 interface AppRouteChildren {
-  AppCampsRoute: typeof AppCampsRoute
+  AppCampsRoute: typeof AppCampsRouteWithChildren
   AppConsultationRoute: typeof AppConsultationRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppFeedbackRoute: typeof AppFeedbackRoute
@@ -334,7 +365,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppCampsRoute: AppCampsRoute,
+  AppCampsRoute: AppCampsRouteWithChildren,
   AppConsultationRoute: AppConsultationRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppFeedbackRoute: AppFeedbackRoute,

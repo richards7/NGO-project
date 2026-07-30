@@ -5,27 +5,56 @@ import { config } from "../config/env";
 import { AppError } from "../utils/app-error";
 import type { LoginDTO, RegisterUserDTO } from "../dtos/auth.dto";
 import type { AuthPayload } from "../middlewares/auth";
+import { logger } from "../utils/logger";
+import { ExcelSyncService } from "./excel-sync.service";
 
 export class AuthService {
+  private excelSync = ExcelSyncService.getInstance();
+
   async login(dto: LoginDTO) {
     const db = getDb();
+    
+    logger.debug(`[Auth] Login attempt: email=${dto.email}, role=${dto.roleName}, campCode=${dto.campCode}`);
+
     const user = await db.user.findUnique({
       where: { email: dto.email },
-      include: { role: true },
+      include: { role: true, camp: true },
     });
 
-    if (!user) throw AppError.unauthorized("Invalid credentials");
+    if (!user) {
+      logger.debug(`[Auth] Failed: User not found (${dto.email})`);
+      throw AppError.unauthorized("Invalid credentials");
+    }
+    
+    if (user.role.name !== dto.roleName) {
+      logger.debug(`[Auth] Failed: Role mismatch (expected ${dto.roleName}, got ${user.role.name})`);
+      throw AppError.unauthorized(`User not found with role: ${dto.roleName}`);
+    }
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!valid) throw AppError.unauthorized("Invalid credentials");
+    if (!valid) {
+      logger.debug(`[Auth] Failed: Incorrect password for ${dto.email}`);
+      throw AppError.unauthorized("Invalid credentials");
+    }
 
     let campId: string | undefined = undefined;
     if (user.role.name !== "admin") {
-      // The user is already bound to a campId from registration
-      if (!user.campId) throw AppError.unauthorized("User is not associated with any camp");
+      if (!dto.campCode) {
+        logger.debug(`[Auth] Failed: Missing Camp ID for non-admin`);
+        throw AppError.badRequest("Camp ID is required for this role");
+      }
+      if (!user.campId || !user.camp) {
+        logger.debug(`[Auth] Failed: User ${dto.email} has no assigned camp`);
+        throw AppError.forbidden("Access denied: You are not assigned to any camp");
+      }
+      if (user.camp.campCode !== dto.campCode) {
+        logger.debug(`[Auth] Failed: Camp mismatch (user camp ${user.camp.campCode} != requested ${dto.campCode})`);
+        throw AppError.forbidden("Access denied: You are not authorized for this Camp ID.");
+      }
       campId = user.campId;
     }
 
+    logger.debug(`[Auth] Success: ${dto.email} authenticated`);
     const payload: AuthPayload = { userId: user.id, email: user.email, role: user.role.name, campId };
 
     const accessToken = jwt.sign(payload, config.JWT_SECRET, {
@@ -67,8 +96,14 @@ export class AuthService {
       include: { role: true },
     });
 
+    // Sync workbook so new staff appears in the camp Excel
+    if (campId) {
+      this.excelSync.syncWorkbook(campId).catch(() => {});
+    }
+
     return { id: user.id, name: user.name, email: user.email, role: user.role.name };
   }
+
 
   async refreshToken(token: string) {
     const db = getDb();

@@ -8,9 +8,9 @@ async function bootstrap() {
     await initDb();
     logger.info("✅ Database connected");
 
-    const server = app.listen(config.PORT, () => {
-      logger.info(`🚀 CampCare Camp OS Backend running on http://localhost:${config.PORT}`);
-      logger.info(`📖 API Docs: http://localhost:${config.PORT}/api-docs`);
+    const server = app.listen(config.PORT, "0.0.0.0", () => {
+      logger.info(`🚀 CampCare Camp OS Backend running on http://0.0.0.0:${config.PORT}`);
+      logger.info(`📖 API Docs: http://0.0.0.0:${config.PORT}/api-docs`);
       logger.info(`🌍 Environment: ${config.NODE_ENV}`);
     });
 

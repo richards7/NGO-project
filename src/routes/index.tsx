@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Activity, ArrowRight, Lock, Mail, ShieldCheck, WifiOff } from "lucide-react";
+import { Activity, ArrowRight, Lock, Mail, ShieldCheck, WifiOff, Tent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,7 @@ function LoginPage() {
   const [role, setRole] = useState<Role>("admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [campCode, setCampCode] = useState("");
   const [remember, setRemember] = useState(true);
 
   useEffect(() => {
@@ -31,16 +32,17 @@ function LoginPage() {
     setRole(r);
     setEmail("");
     setPassword("");
+    setCampCode("");
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
+    if (!email || !password || (role !== "admin" && !campCode)) {
+      toast.error("Please fill in all required fields");
       return;
     }
     try {
-      const s = await login(email, password, "");
+      const s = await login(email, password, role !== "admin" ? campCode : undefined, role);
       toast.success(`Welcome, ${s.name.split(" ")[0]}`);
       navigate({ to: ROLE_HOME[s.role] });
     } catch (err: any) {
@@ -117,10 +119,10 @@ function LoginPage() {
 
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Official Email Address</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9 h-11" />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-9 h-11" placeholder="name@campcare.org" />
               </div>
             </div>
             <div className="space-y-1.5">
@@ -132,9 +134,25 @@ function LoginPage() {
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-9 h-11" />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-9 h-11" placeholder="••••••••" />
               </div>
             </div>
+
+            {role !== "admin" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="campCode">Camp ID</Label>
+                <div className="relative">
+                  <Tent className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input 
+                    id="campCode" 
+                    value={campCode} 
+                    onChange={(e) => setCampCode(e.target.value.toUpperCase())} 
+                    className="pl-9 h-11" 
+                    placeholder="e.g. CMP-2026-0001" 
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-2">
               <Checkbox id="remember" checked={remember} onCheckedChange={(v) => setRemember(!!v)} />

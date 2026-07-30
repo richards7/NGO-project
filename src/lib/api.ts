@@ -69,6 +69,13 @@ export async function apiRequest<T = any>(
       const body = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        // Auto-logout on 401 Unauthorized, but NOT during login itself
+        if (response.status === 401 && endpoint !== "/auth/login" && typeof window !== "undefined") {
+          localStorage.removeItem("campcare.token");
+          localStorage.removeItem("campcare.session");
+          window.location.href = "/";
+        }
+
         // If 5xx error, we might want to fallback to cache for GET
         if (!isMutation && response.status >= 500) {
           throw new Error("Server error, falling back to cache");

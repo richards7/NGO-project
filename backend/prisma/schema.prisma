@@ -48,10 +48,14 @@ model Permission {
 // 4. Medical Camp Model
 model Camp {
   id           String        @id @default(uuid())
-  campCode     String        @unique // e.g. "C-2041"
+  campCode     String        @unique // e.g. "CMP-2026-0001"
   name         String
-  location     String
-  date         DateTime
+  address      String
+  district     String
+  state        String
+  pincode      String
+  startDate    DateTime
+  endDate      DateTime
   status       String        @default("Scheduled") // "Scheduled", "Active", "Completed"
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

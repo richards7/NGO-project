@@ -1,13 +1,19 @@
 import { Request, Response, NextFunction } from "express";
 import { PatientService } from "../services/patient.service";
 import { sendSuccess, sendPaginated } from "../utils/response";
+import { AppError } from "../utils/app-error";
 
 const patientService = new PatientService();
 
 export class PatientController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const patient = await patientService.create(req.body);
+      // Force injection of campId from authenticated user if they are not admin
+      const campId = req.user?.role !== "admin" ? req.user?.campId : req.body.campId;
+      if (!campId) throw AppError.badRequest("Camp ID is required");
+      
+      const payload = { ...req.body, campId };
+      const patient = await patientService.create(payload, campId);
       sendSuccess(res, patient, "Patient registered successfully", 201);
     } catch (err) { next(err); }
   }
@@ -17,7 +23,9 @@ export class PatientController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const search = req.query.search as string | undefined;
-      const { patients, total } = await patientService.findAll(page, limit, search);
+      const campId = req.user?.role !== "admin" ? req.user?.campId : (req.query.campId as string | undefined);
+      
+      const { patients, total } = await patientService.findAll(page, limit, search, campId);
       sendPaginated(res, patients, total, page, limit);
     } catch (err) { next(err); }
   }
@@ -52,7 +60,8 @@ export class PatientController {
 
   async getQueue(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const queue = await patientService.getQueue(req.query.campId as string);
+      const campId = req.user?.role !== "admin" ? req.user?.campId : (req.query.campId as string | undefined);
+      const queue = await patientService.getQueue(campId);
       sendSuccess(res, queue, "Queue fetched");
     } catch (err) { next(err); }
   }
@@ -66,7 +75,8 @@ export class PatientController {
 
   async getPharmacyQueue(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const queue = await patientService.getPharmacyQueue();
+      const campId = req.user?.role !== "admin" ? req.user?.campId : (req.query.campId as string | undefined);
+      const queue = await patientService.getPharmacyQueue(campId);
       sendSuccess(res, queue, "Pharmacy queue fetched");
     } catch (err) { next(err); }
   }

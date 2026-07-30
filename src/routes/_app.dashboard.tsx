@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app-shell";
+import { Link } from "@tanstack/react-router";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
@@ -121,13 +122,19 @@ function Dashboard() {
   const [topMeds, setTopMeds] = useState<any[]>([]);
   const [camps, setCamps] = useState<any[]>([]);
 
-  useEffect(() => {
+  const fetchData = () => {
     apiRequest("/analytics/dashboard").then(r => setDashboard(r.data)).catch(() => {});
     apiRequest("/analytics/diseases").then(r => setDiseases(r.data || [])).catch(() => {});
     apiRequest("/analytics/age").then(r => setAgeDist(r.data || [])).catch(() => {});
     apiRequest("/analytics/gender").then(r => setGenderDist(r.data || [])).catch(() => {});
     apiRequest("/analytics/medicines/top").then(r => setTopMeds(r.data || [])).catch(() => {});
     apiRequest("/camps").then(r => setCamps(r.data || [])).catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // 30-second auto-refresh
+    return () => clearInterval(interval);
   }, []);
 
   const d = dashboard || {};
@@ -148,17 +155,21 @@ function Dashboard() {
       <motion.div
         initial="hidden" animate="show"
         variants={{ show: { transition: { staggerChildren: 0.05 } } }}
-        className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+        className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4"
       >
         {[
           { icon: Tent, label: "Total Camps", value: String(d.totalCamps ?? 0), tone: "primary" as const },
-          { icon: Users, label: "Registered Patients", value: String(d.totalPatients ?? 0), tone: "accent" as const },
-          { icon: Stethoscope, label: "Consultations", value: String(d.totalConsultations ?? 0), tone: "primary" as const },
-          { icon: Pill, label: "Medicines Dispensed", value: String(d.totalMedicinesDispensed ?? 0), tone: "accent" as const },
+          { icon: Tent, label: "Active Camps", value: String(d.activeCamps ?? 0), tone: "success" as const },
+          { icon: Tent, label: "Completed", value: String(d.completedCamps ?? 0), tone: "accent" as const },
+          { icon: Users, label: "Patients", value: String(d.totalPatients ?? 0), tone: "primary" as const },
           { icon: Activity, label: "Patients Today", value: String(d.patientsToday ?? 0), tone: "success" as const },
+          { icon: Stethoscope, label: "Consultations", value: String(d.totalConsultations ?? 0), tone: "primary" as const },
+          { icon: Stethoscope, label: "Doctors", value: String(d.totalDoctors ?? 0), tone: "accent" as const },
+          { icon: Users, label: "Reg Staff", value: String(d.totalRegistrationStaff ?? 0), tone: "primary" as const },
+          { icon: Pill, label: "Pharmacy Staff", value: String(d.totalPharmacyStaff ?? 0), tone: "warning" as const },
+          { icon: Pill, label: "Meds Dispensed", value: String(d.totalMedicinesDispensed ?? 0), tone: "success" as const },
           { icon: Package, label: "Total Stock", value: String(d.totalStock ?? 0), tone: "warning" as const },
-          { icon: Tent, label: "Active Camps", value: String(d.activeCamps ?? 0), tone: "primary" as const },
-          { icon: Users, label: "Completed", value: String(d.completedPatients ?? 0), tone: "success" as const },
+          { icon: Users, label: "Completed Patients", value: String(d.completedPatients ?? 0), tone: "success" as const },
         ].map((s) => (
           <motion.div key={s.label} variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}>
             <StatCard {...s} />
@@ -260,28 +271,37 @@ function Dashboard() {
             <h3 className="font-semibold">Active & upcoming camps</h3>
           </div>
           <div className="space-y-2">
-            {camps.slice(0, 4).map((c: any) => (
-              <div key={c.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition">
-                <div className="size-10 rounded-xl bg-primary/10 text-primary grid place-items-center">
-                  <Tent className="size-5" />
+            {camps.slice(0, 5).map((c: any) => (
+              <Link to="/camps/$id" params={{ id: c.id }} key={c.id}>
+                <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition cursor-pointer mt-2 border">
+                  <div className="size-10 rounded-xl bg-primary/10 text-primary grid place-items-center">
+                    <Tent className="size-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-sm truncate">{c.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{c.district}, {c.state}</div>
+                  </div>
+                  <div className="text-right">
+                    <Badge
+                      variant="outline"
+                      className={
+                        c.status === "Active" ? "bg-success/10 text-success border-success/30"
+                        : c.status === "Scheduled" ? "bg-primary/10 text-primary border-primary/30"
+                        : "bg-muted text-muted-foreground"
+                      }
+                    >
+                      {c.status}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-sm truncate">{c.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">{c.location}</div>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={
-                    c.status === "Active" ? "bg-success/10 text-success border-success/30"
-                    : c.status === "Scheduled" ? "bg-primary/10 text-primary border-primary/30"
-                    : "bg-muted text-muted-foreground"
-                  }
-                >
-                  {c.status}
-                </Badge>
-              </div>
+              </Link>
             ))}
             {camps.length === 0 && <div className="text-xs text-muted-foreground text-center py-4">No camps yet</div>}
+            {camps.length > 5 && (
+              <Link to="/camps" className="block text-center text-sm text-primary mt-4 hover:underline">
+                View all camps →
+              </Link>
+            )}
           </div>
         </Card>
       </div>

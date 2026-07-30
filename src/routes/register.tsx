@@ -100,12 +100,19 @@ function RegisterPage() {
           
           {role !== "admin" && (
             <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
-              <Label htmlFor="campCode">Camp Code</Label>
+              <Label htmlFor="campCode">Camp ID</Label>
               <div className="relative">
                 <Activity className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input id="campCode" type="text" value={campCode} onChange={(e) => setCampCode(e.target.value.toUpperCase().trim())} className="pl-9 h-11 uppercase" />
+                <Input 
+                  id="campCode" 
+                  type="text" 
+                  value={campCode} 
+                  onChange={(e) => setCampCode(e.target.value.toUpperCase().trim())} 
+                  className="pl-9 h-11 uppercase" 
+                  placeholder="e.g. CMP-2026-0001"
+                />
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">Ask your NGO Admin for the Camp Code to join</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Ask your NGO Admin for the Camp ID to join</p>
             </div>
           )}
 

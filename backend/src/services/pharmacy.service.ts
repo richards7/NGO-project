@@ -1,8 +1,11 @@
 import { getDb } from "../config/database";
 import { AppError } from "../utils/app-error";
 import { logger } from "../utils/logger";
+import { ExcelSyncService } from "./excel-sync.service";
 
 export class PharmacyService {
+  private excelSync = ExcelSyncService.getInstance();
+
   async dispense(prescriptionId: string, campId: string, userId: string) {
     const db = getDb();
     const prescription = await db.prescription.findUnique({
@@ -51,6 +54,10 @@ export class PharmacyService {
     });
 
     logger.info(`Dispensed prescription ${prescriptionId}`);
+
+    // Sync workbook
+    this.excelSync.syncWorkbook(campId).catch(() => {});
+
     return { message: "Medicines dispensed successfully" };
   }
 
@@ -117,6 +124,9 @@ export class PharmacyService {
     await db.medicineTransaction.create({
       data: { medicineId, campId, quantity, type: "IN", userId },
     });
+
+    // Sync workbook
+    this.excelSync.syncWorkbook(campId).catch(() => {});
 
     return { message: `Added ${quantity} units` };
   }

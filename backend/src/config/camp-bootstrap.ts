@@ -38,8 +38,12 @@ CREATE TABLE IF NOT EXISTS "camps" (
   "id" TEXT PRIMARY KEY,
   "camp_code" TEXT UNIQUE NOT NULL,
   "name" TEXT NOT NULL,
-  "location" TEXT NOT NULL,
-  "date" TEXT NOT NULL,
+  "address" TEXT NOT NULL,
+  "district" TEXT NOT NULL,
+  "state" TEXT NOT NULL,
+  "pincode" TEXT NOT NULL,
+  "start_date" TEXT NOT NULL,
+  "end_date" TEXT NOT NULL,
   "status" TEXT DEFAULT 'Scheduled',
   "ngo_id" TEXT,
   "created_at" TEXT NOT NULL,
@@ -303,9 +307,9 @@ export function bootstrapDb(db: Database.Database) {
         insertUser.run(user.id, user.email, user.passwordHash, user.name, user.roleId, null, user.createdAt, user.updatedAt);
       }
 
-      const insertCamp = db.prepare('INSERT INTO "camps" (id, camp_code, name, location, date, status, ngo_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      const insertCamp = db.prepare('INSERT INTO "camps" (id, camp_code, name, address, district, state, pincode, start_date, end_date, status, ngo_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
       for (const camp of data.camps || []) {
-        insertCamp.run(camp.id, camp.campCode, camp.name, camp.location, camp.date, camp.status, null, camp.createdAt, camp.updatedAt);
+        insertCamp.run(camp.id, camp.campCode, camp.name, camp.address, camp.district, camp.state, camp.pincode, camp.startDate, camp.endDate, camp.status, null, camp.createdAt, camp.updatedAt);
       }
 
       logger.info("[CampBootstrap] Seeding complete.");

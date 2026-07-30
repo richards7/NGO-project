@@ -2,6 +2,7 @@ import { getDb } from "../config/database";
 import { AppError } from "../utils/app-error";
 import type { CreatePatientDTO, UpdatePatientDTO, CaptureVitalsDTO, CreateFamilyDTO } from "../dtos/patient.dto";
 import { appendPatientToCSV } from "../utils/csv";
+import { ExcelSyncService } from "./excel-sync.service";
 
 interface TriageResult {
   priority: "highest" | "high" | "medium" | "normal";
@@ -10,6 +11,7 @@ interface TriageResult {
 
 export class PatientService {
   private tokenCounter = 0;
+  private excelSync = ExcelSyncService.getInstance();
 
   async create(dto: CreatePatientDTO, campId?: string) {
     const db = getDb();
@@ -38,12 +40,17 @@ export class PatientService {
 
     appendPatientToCSV(patient);
 
+    // Sync workbook if patient belongs to a camp
+    if (patient.campId) {
+      this.excelSync.syncWorkbook(patient.campId).catch(() => {});
+    }
+
     return patient;
   }
 
-  async findAll(page = 1, limit = 20, search?: string) {
+  async findAll(page = 1, limit = 20, search?: string, campId?: string) {
     const db = getDb();
-    const where = search
+    const where: any = search
       ? {
           OR: [
             { name: { contains: search, mode: "insensitive" as const } },
@@ -53,6 +60,10 @@ export class PatientService {
           ],
         }
       : {};
+
+    if (campId) {
+      where.campId = campId;
+    }
 
     const [patients, total] = await Promise.all([
       db.patient.findMany({
@@ -207,6 +218,11 @@ export class PatientService {
       },
     });
 
+    // Sync workbook after vitals capture
+    if (patient.campId) {
+      this.excelSync.syncWorkbook(patient.campId).catch(() => {});
+    }
+
     return { vitals, triage };
   }
 
@@ -259,10 +275,13 @@ export class PatientService {
       normal: 3,
     };
 
+    const where: any = {
+      status: { in: ["Registered", "Vitals Captured", "Waiting", "In Consultation"] },
+    };
+    if (campId) where.campId = campId;
+
     const patients = await db.patient.findMany({
-      where: {
-        status: { in: ["Registered", "Vitals Captured", "Waiting", "In Consultation"] },
-      },
+      where,
       orderBy: [
         { queuedAt: "asc" },
       ],
@@ -282,12 +301,15 @@ export class PatientService {
     return patients;
   }
 
-  async getPharmacyQueue() {
+  async getPharmacyQueue(campId?: string) {
     const db = getDb();
+    const where: any = {
+      status: { in: ["Waiting for Pharmacy", "Completed"] },
+    };
+    if (campId) where.campId = campId;
+
     return db.patient.findMany({
-      where: {
-        status: { in: ["Waiting for Pharmacy", "Completed"] },
-      },
+      where,
       orderBy: { updatedAt: "desc" },
       include: {
         vitals: { orderBy: { createdAt: "desc" }, take: 1 },
